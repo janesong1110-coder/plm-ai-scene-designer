@@ -9,6 +9,9 @@
 <script src="https://cdn.tailwindcss.com">
 </script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<!-- bpmn-js BPMN 2.0 Modeler (loaded lazily when Step 2 is entered) -->
+<link rel="stylesheet" href="https://unpkg.com/bpmn-js@18.19.0/dist/assets/diagram-js.css">
+<link rel="stylesheet" href="https://unpkg.com/bpmn-js@18.19.0/dist/assets/bpmn-js.css">
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', sans-serif; font-size: 13px; color: #2c2c2a; background: #fcfcf9; min-height: 100vh; display: flex; flex-direction: column; }
@@ -158,6 +161,23 @@ select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmln
 .wf-context-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
 .wf-context-grid textarea { min-height: 80px; }
 
+/* ── BPMN Canvas ── */
+.mode-tabs { display: flex; gap: 0; margin-bottom: 16px; border-bottom: 2px solid var(--border); }
+.mode-tab { padding: 10px 20px; font-size: 13px; font-weight: 500; cursor: pointer; border: none; background: none; color: #888780; transition: all 0.15s; position: relative; }
+.mode-tab:hover { color: var(--primary); }
+.mode-tab.active { color: var(--accent); }
+.mode-tab.active::after { content: ''; position: absolute; bottom: -2px; left: 0; right: 0; height: 2px; background: var(--accent); }
+.bpmn-loading { display: flex; align-items: center; justify-content: center; min-height: 300px; background: #fafaf7; border: 1px dashed var(--border); border-radius: 8px; flex-direction: column; gap: 12px; }
+.bpmn-loading .spinner { width: 32px; height: 32px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: bpmnSpin 0.8s linear infinite; }
+@keyframes bpmnSpin { to { transform: rotate(360deg); } }
+.bpmn-canvas-wrap { border: 0.5px solid var(--border); border-radius: 8px; overflow: hidden; background: #fff; }
+#bpmnCanvas { width: 100%; min-height: 550px; }
+#bpmnCanvas .djs-palette { background: #fafaf7; border-right: 0.5px solid var(--border); }
+.bpmn-toolbar { display: flex; gap: 8px; padding: 8px 0; align-items: center; flex-wrap: wrap; }
+.bpmn-toolbar .btn { font-size: 11px; padding: 5px 12px; }
+.bpmn-toolbar .btn i { margin-right: 4px; }
+.bpmn-tip { font-size: 11px; color: #888780; margin-left: auto; }
+
 /* ── Step 4 Capability Toggles ── */
 .capability-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 16px; }
 .capability-card { border: 0.5px solid var(--border); border-radius: 8px; padding: 14px; cursor: pointer; transition: all 0.15s; background: #fafaf7; }
@@ -287,6 +307,21 @@ var FLOW_COMPLEXITY_OPTIONS = [
   { value: 'standard', label: '标准流程', desc: '5-7步，含1个判断点' },
   { value: 'complex', label: '复杂流程', desc: '8步以上，含多分支/多判断' }
 ];
+
+// BPMN 2.0 minimal default diagram (StartEvent only)
+var BPMN_DEFAULT_XML = '<?xml version="1.0" encoding="UTF-8"?>\n' +
+'<bpmn:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_1" targetNamespace="http://bpmn.io/schema/bpmn">\n' +
+'  <bpmn:process id="Process_1" isExecutable="false">\n' +
+'    <bpmn:startEvent id="StartEvent_1" name="开始"/>\n' +
+'  </bpmn:process>\n' +
+'  <bpmndi:BPMNDiagram id="BPMNDiagram_1">\n' +
+'    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_1">\n' +
+'      <bpmndi:BPMNShape id="StartEvent_1_di" bpmnElement="StartEvent_1">\n' +
+'        <dc:Bounds x="179" y="159" width="36" height="36"/>\n' +
+'      </bpmndi:BPMNShape>\n' +
+'    </bpmndi:BPMNPlane>\n' +
+'  </bpmndi:BPMNDiagram>\n' +
+'</bpmn:definitions>';
 
 var PRESETS = {
   '变更影响分析': {
@@ -850,56 +885,53 @@ function renderStep2() {
   html += '<input type="hidden" id="f_flowComplexity" value="' + escapeHtml(curComplexity) + '"/>';
   html += '</div>';
 
-  // ── 流程步骤动态编辑列表 ──
-  html += '<div class="form-group">';
-  html += '<div class="form-label">流程步骤定义 <span class="required">*</span></div>';
-  html += '<div class="form-hint">定义业务流程的每个步骤，将直接映射为流程图节点。步骤类型决定节点形状。</div>';
-  html += '<div class="flowstep-header">';
-  html += '<span class="fs-h-num"></span>';
-  html += '<span class="fs-h-label">步骤名称</span>';
-  html += '<span class="fs-h-label-type">步骤类型</span>';
-  html += '<span class="fs-h-label-desc">简要说明</span>';
-  html += '<span class="fs-h-label-role">角色</span>';
-  html += '<span class="fs-h-label-parallel">并行组</span>';
-  html += '<span class="fs-h-gap"></span>';
-  html += '</div>';
-  html += '<div id="flowstepList"></div>';
-  html += '<div style="margin-top:8px;display:flex;gap:8px;align-items:center;">';
-  html += '<button class="btn btn-outline btn-sm" onclick="addFlowStepEntry()"><i class="fa-solid fa-plus"></i> 添加步骤</button>';
-  html += '<button class="btn btn-accent btn-sm" onclick="genFlowFromSteps()" style="margin-left:auto;"><i class="fa-solid fa-play"></i> 生成流程图</button>';
-  html += '</div>';
-  // Health check bar
-  html += '<div id="flowHealthBar" class="flow-health-bar" style="display:none;"></div>';
+  // ── 模式切换 Tabs ──
+  var flowMode = ssGet('f_flowMode', 'bpmn');
+  html += '<div class="mode-tabs">';
+  html += '<button class="mode-tab' + (flowMode === 'bpmn' ? ' active' : '') + '" id="tabBpmn" onclick="switchFlowMode(\'bpmn\')"><i class="fa-solid fa-diagram-project"></i> BPMN 2.0 可视化编辑</button>';
+  html += '<button class="mode-tab' + (flowMode === 'mermaid' ? ' active' : '') + '" id="tabMermaid" onclick="switchFlowMode(\'mermaid\')"><i class="fa-solid fa-code"></i> Mermaid 代码编辑</button>';
   html += '</div>';
 
-  // Flowchart Preview (always visible, full width by default)
-  html += '<div class="wf-section">';
-  html += '<div class="wf-section-title"><span>流程图预览</span>';
-  html += '<div class="wf-export-bar" style="margin-left:auto;padding:0;">';
-  html += '<button class="btn btn-sm btn-secondary" onclick="wfExportMmd()"><i class="fa-regular fa-file-code"></i> .mmd</button>';
-  html += '<button class="btn btn-sm btn-secondary" onclick="wfExportSVG()"><i class="fa-regular fa-file-image"></i> SVG</button>';
-  html += '<button class="btn btn-sm btn-secondary" onclick="wfExportPNG()"><i class="fa-regular fa-image"></i> PNG</button>';
+  // ── BPMN 可视化编辑模式 ──
+  html += '<div id="bpmnModeWrap"' + (flowMode === 'bpmn' ? '' : ' style="display:none;"') + '>';
+  html += '<div class="bpmn-loading" id="bpmnLoadingDiv"><div class="spinner"></div><p style="font-size:13px;color:#888780;">正在加载 BPMN 2.0 可视化编辑器...</p><p style="font-size:11px;color:#b8b5ab;">首次加载约需 3-5 秒</p></div>';
+  html += '<div class="bpmn-canvas-wrap" id="bpmnCanvasWrap" style="display:none;"><div id="bpmnCanvas"></div></div>';
+  html += '<div class="bpmn-toolbar">';
+  html += '<button class="btn btn-sm btn-accent" onclick="bpmnExportXML()"><i class="fa-solid fa-file-export"></i> 导出 BPMN XML</button>';
+  html += '<button class="btn btn-sm btn-secondary" onclick="bpmnExportSVG()"><i class="fa-solid fa-file-image"></i> 导出 SVG</button>';
+  html += '<button class="btn btn-sm btn-secondary" onclick="bpmnExportPNG()"><i class="fa-solid fa-image"></i> 导出 PNG</button>';
+  html += '<button class="btn btn-sm btn-secondary" onclick="bpmnImportXML()"><i class="fa-solid fa-file-import"></i> 导入 XML</button>';
+  html += '<span class="bpmn-tip">\uD83D\uDCA1 从左侧面板拖拽元素到画布，双击元素编辑名称</span>';
+  html += '</div>';
+  html += '<input type="file" id="bpmnFileInput" accept=".bpmn,.xml" style="display:none;" onchange="bpmnHandleFileImport(event)"/>';
+  html += '</div>';
+
+  // ── Mermaid 代码编辑模式 ──
+  html += '<div id="mermaidModeWrap"' + (flowMode === 'mermaid' ? '' : ' style="display:none;"') + '>';
+  html += '<div class="wf-editor-wrap">';
+  html += '<div class="wf-code-pane" style="width:100%;">';
+  html += '<textarea id="wfLiveCode" oninput="wfLivePreview()" style="min-height:400px;" placeholder="graph TD\n    A[开始] --> B[处理] --> C[结束]...">';
+  html += escapeHtml(ssGet('f_mainFlow', ''));
+  html += '</textarea>';
+  html += '</div></div>';
+  html += '<div class="wf-export-bar">';
+  html += '<button class="btn btn-sm btn-outline" onclick="wfLiveFormat()"><i class="fa-solid fa-indent"></i> 格式化</button>';
+  html += '<button class="btn btn-sm btn-secondary" onclick="wfExportMmd()"><i class="fa-regular fa-file-code"></i> 导出 .mmd</button>';
+  html += '<button class="btn btn-sm btn-secondary" onclick="wfExportSVG()"><i class="fa-regular fa-file-image"></i> 导出 SVG</button>';
+  html += '<button class="btn btn-sm btn-secondary" onclick="wfExportPNG()"><i class="fa-regular fa-image"></i> 导出 PNG</button>';
   html += '<button class="btn btn-sm btn-secondary" onclick="wfCopyMermaid()"><i class="fa-regular fa-copy"></i> 复制代码</button>';
   html += '</div>';
-  html += '</div>';
-  html += '<div class="wf-preview-pane wf-full-preview" id="wfLivePreviewWrap" style="border:0.5px solid var(--border);border-radius:8px;">';
-  html += '<div class="empty-state"><div class="empty-icon">\uD83D\uDCC8</div><p>点击「生成流程图」按钮查看</p></div>';
-  html += '</div></div>';
-
-  // Collapsible Code Editor
   html += '<div class="wf-collapse-bar">';
-  html += '<button onclick="toggleCodeEditor()" id="btnToggleEditor"><i class="fa-solid fa-code"></i> 高级编辑 ▾</button>';
+  html += '<button onclick="toggleCodePreview()" id="btnTogglePreview"><i class="fa-solid fa-eye"></i> 显示预览 ▸</button>';
   html += '</div>';
-  html += '<div id="wfEditorWrap" style="display:none;">';
-  html += '<div class="wf-editor-wrap">';
-  html += '<div class="wf-code-pane">';
-  html += '<textarea id="wfLiveCode" oninput="wfLivePreview()" placeholder="graph TD\n    A[开始] --> B[处理]..."></textarea>';
+  html += '<div class="wf-preview-pane wf-full-preview" id="wfLivePreviewWrap" style="display:none;border:0.5px solid var(--border);border-radius:8px;min-height:280px;">';
+  html += '<div class="empty-state"><div class="empty-icon">📈</div><p>点击「显示预览」查看流程图</p></div>';
   html += '</div>';
-  html += '<div style="width:50%;padding:12px;background:#fafaf7;overflow-y:auto;display:none;" id="wfCodePreviewPane">';
-  html += '</div></div>';
-  html += '<button class="btn btn-sm btn-outline" onclick="wfLiveFormat()" style="margin-top:6px;"><i class="fa-solid fa-indent"></i> 格式化</button>';
-  html += '<textarea id="f_mainFlow" style="display:none;">' + escapeHtml(ssGet('f_mainFlow')) + '</textarea>';
+  html += '<textarea id="f_mainFlow" style="display:none;">' + escapeHtml(ssGet('f_mainFlow', '')) + '</textarea>';
   html += '</div>';
+
+  // ── 流程健康检查 ──
+  html += '<div id="flowHealthBar" class="flow-health-bar" style="display:none;"></div>';
 
   // ── 业务上下文 ──
   html += '<div class="wf-section" style="margin-top:20px;">';
@@ -915,13 +947,330 @@ function renderStep2() {
 }
 
 function restoreStep2() {
-  var code = ssGet('f_mainFlow');
-  if (code) {
-    var el = document.getElementById('wfLiveCode');
-    if (el) { el.value = code; setTimeout(wfLiveRenderNow, 200); }
+  var flowMode = ssGet('f_flowMode', 'bpmn');
+  if (flowMode === 'bpmn') {
+    // Init BPMN modeler (lazy-loads bpmn-js script)
+    setTimeout(function() { initBpmnModeler(); }, 150);
+  } else {
+    // Mermaid mode: restore text editor and render preview
+    var code = ssGet('f_mainFlow');
+    if (code) {
+      var el = document.getElementById('wfLiveCode');
+      if (el) { el.value = code; setTimeout(wfLiveRenderNow, 200); }
+    }
   }
-  restoreFlowSteps();
   setTimeout(function() { renderFlowHealth(); }, 100);
+}
+
+// ==============================
+// BPMN 2.0 MODELER (bpmn-js v18.19.0)
+// ==============================
+var _bpmnModeler = null;
+var _bpmnScriptLoaded = false;
+var _bpmnSaveTimer = null;
+
+function switchFlowMode(mode) {
+  ssSet('f_flowMode', mode);
+  // Save current mode's data before switching
+  if (mode === 'mermaid' && _bpmnModeler) {
+    saveBpmnDiagram().then(function() {
+      var xml = ssGet('f_bpmnXml', '');
+      if (xml) {
+        var mmd = bpmnXmlToMermaid(xml);
+        ssSet('f_mainFlow', mmd);
+        var wfCode = document.getElementById('wfLiveCode');
+        if (wfCode) { wfCode.value = mmd; }
+      }
+      setTimeout(function() {
+        var el = document.getElementById('wfLiveCode');
+        if (el && el.value) wfLiveRenderNow();
+      }, 300);
+    });
+  } else if (mode === 'bpmn' && !_bpmnModeler) {
+    setTimeout(function() { initBpmnModeler(); }, 100);
+  }
+  var bpmnWrap = document.getElementById('bpmnModeWrap');
+  var mermaidWrap = document.getElementById('mermaidModeWrap');
+  if (bpmnWrap) bpmnWrap.style.display = (mode === 'bpmn') ? '' : 'none';
+  if (mermaidWrap) mermaidWrap.style.display = (mode === 'mermaid') ? '' : 'none';
+  var tabB = document.getElementById('tabBpmn');
+  var tabM = document.getElementById('tabMermaid');
+  if (tabB) tabB.className = 'mode-tab' + (mode === 'bpmn' ? ' active' : '');
+  if (tabM) tabM.className = 'mode-tab' + (mode === 'mermaid' ? ' active' : '');
+}
+
+function initBpmnModeler() {
+  if (_bpmnModeler) {
+    // Re-use existing instance if container still valid
+    var canvas = document.getElementById('bpmnCanvas');
+    if (canvas && canvas.children.length > 0) return;
+    // Container was recreated (navigation), destroy old instance
+    try { _bpmnModeler.destroy(); } catch(e) {}
+    _bpmnModeler = null;
+  }
+  var loadingDiv = document.getElementById('bpmnLoadingDiv');
+  if (!loadingDiv) return;
+  if (_bpmnScriptLoaded) { createBpmnModeler(); return; }
+  var script = document.createElement('script');
+  script.src = 'https://unpkg.com/bpmn-js@18.19.0/dist/bpmn-modeler.development.js';
+  script.onload = function() { _bpmnScriptLoaded = true; createBpmnModeler(); };
+  script.onerror = function() { loadingDiv.innerHTML = '<p style="color:#e24b4a;">\u26A0\uFE0F BPMN 编辑器加载失败，请检查网络连接后刷新页面</p>'; };
+  document.head.appendChild(script);
+}
+
+function createBpmnModeler() {
+  var loadingDiv = document.getElementById('bpmnLoadingDiv');
+  var canvasWrap = document.getElementById('bpmnCanvasWrap');
+  if (!canvasWrap) return;
+  try {
+    _bpmnModeler = new BpmnJS({ container: '#bpmnCanvas' });
+    var xml = ssGet('f_bpmnXml', '');
+    if (!xml) {
+      var flowSteps = ssGetJSON('f_flowSteps', []);
+      if (flowSteps.length > 0) { xml = flowStepsToBpmnXml(flowSteps); }
+      else { xml = BPMN_DEFAULT_XML; }
+    }
+    _bpmnModeler.importXML(xml).then(function() {
+      loadingDiv.style.display = 'none';
+      canvasWrap.style.display = '';
+      _bpmnModeler.get('eventBus').on('commandStack.changed', function() {
+        if (_bpmnSaveTimer) clearTimeout(_bpmnSaveTimer);
+        _bpmnSaveTimer = setTimeout(function() { saveBpmnDiagram(); }, 500);
+      });
+    }).catch(function(err) {
+      loadingDiv.innerHTML = '<p style="color:#e24b4a;">\u26A0\uFE0F BPMN 图表加载失败: ' + escapeHtml(String(err.message || err)) + '</p>';
+    });
+  } catch(e) {
+    loadingDiv.innerHTML = '<p style="color:#e24b4a;">\u26A0\uFE0F BPMN 编辑器初始化失败</p>';
+  }
+}
+
+function saveBpmnDiagram() {
+  if (!_bpmnModeler) return Promise.resolve();
+  return _bpmnModeler.saveXML({ format: true }).then(function(result) {
+    if (result && result.xml) {
+      ssSet('f_bpmnXml', result.xml);
+      try {
+        var mmd = bpmnXmlToMermaid(result.xml);
+        ssSet('f_mainFlow', mmd);
+        var steps = bpmnXmlToFlowSteps(result.xml);
+        if (steps.length > 0) ssSet('f_flowSteps', JSON.stringify(steps));
+        var f_mainFlow = document.getElementById('f_mainFlow');
+        if (f_mainFlow) f_mainFlow.value = mmd;
+      } catch(e) { /* conversion error non-fatal */ }
+      renderFlowHealth();
+    }
+  }).catch(function(err) { console.error('BPMN save error:', err); });
+}
+
+function bpmnExportXML() {
+  saveBpmnDiagram().then(function() {
+    var xml = ssGet('f_bpmnXml', '');
+    if (!xml) { wfToast('请先在画布上创建流程图'); return; }
+    var name = ssGet('f_name', 'process');
+    var blob = new Blob([xml], { type: 'application/xml;charset=utf-8' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'BPMN_' + name.replace(/\\s+/g, '_').replace(/[\\/\\\\:*?"<>|]/g, '') + '.bpmn';
+    a.click();
+    wfToast('BPMN XML 已导出');
+  });
+}
+
+function bpmnExportSVG() {
+  if (!_bpmnModeler) return;
+  _bpmnModeler.saveSVG().then(function(result) {
+    var blob = new Blob([result.svg], { type: 'image/svg+xml;charset=utf-8' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'BPMN_' + ssGet('f_name', 'process').replace(/\\s+/g, '_') + '.svg';
+    a.click();
+    wfToast('SVG 已导出');
+  }).catch(function(err) { wfToast('导出失败: ' + err.message); });
+}
+
+function bpmnExportPNG() {
+  if (!_bpmnModeler) return;
+  _bpmnModeler.saveSVG().then(function(result) {
+    var canvas = document.createElement('canvas');
+    var ctx = canvas.getContext('2d');
+    var img = new Image();
+    var svgBlob = new Blob([result.svg], { type: 'image/svg+xml;charset=utf-8' });
+    var url = URL.createObjectURL(svgBlob);
+    img.onload = function() {
+      canvas.width = img.width * 2; canvas.height = img.height * 2;
+      ctx.scale(2, 2); ctx.drawImage(img, 0, 0);
+      URL.revokeObjectURL(url);
+      canvas.toBlob(function(blob) {
+        var a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'BPMN_' + ssGet('f_name', 'process').replace(/\\s+/g, '_') + '.png';
+        a.click(); wfToast('PNG 已导出');
+      });
+    };
+    img.src = url;
+  }).catch(function(err) { wfToast('导出失败: ' + err.message); });
+}
+
+function bpmnImportXML() {
+  var fi = document.getElementById('bpmnFileInput');
+  if (fi) fi.click();
+}
+
+function bpmnHandleFileImport(event) {
+  var file = event.target.files[0];
+  if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    var xml = e.target.result;
+    if (_bpmnModeler) {
+      _bpmnModeler.importXML(xml).then(function() {
+        saveBpmnDiagram(); wfToast('BPMN 文件已导入');
+      }).catch(function(err) { wfToast('导入失败: ' + err.message); });
+    } else {
+      ssSet('f_bpmnXml', xml); wfToast('文件已加载，BPMN 编辑器就绪后显示');
+    }
+  };
+  reader.readAsText(file);
+  event.target.value = '';
+}
+
+function toggleCodePreview() {
+  var wrap = document.getElementById('wfLivePreviewWrap');
+  var btn = document.getElementById('btnTogglePreview');
+  if (!wrap || !btn) return;
+  if (wrap.style.display === 'none') {
+    wrap.style.display = '';
+    btn.innerHTML = '<i class="fa-solid fa-eye-slash"></i> 隐藏预览 \u25B6';
+    wfLiveRenderNow();
+  } else {
+    wrap.style.display = 'none';
+    btn.innerHTML = '<i class="fa-solid fa-eye"></i> 显示预览 \u25B8';
+  }
+}
+
+// ==============================
+// BPMN ↔ OTHER FORMAT CONVERTERS
+// ==============================
+
+function bpmnXmlToMermaid(xml) {
+  try {
+    var parser = new DOMParser();
+    var doc = parser.parseFromString(xml, 'application/xml');
+    var process = doc.querySelector('process, *|process');
+    if (!process) return 'graph TD\n    A[流程]';
+    function getLN(el) { return el.localName || el.nodeName.replace(/^.*:/, ''); }
+    function getName(el) { return el.getAttribute('name') || el.getAttribute('id') || getLN(el); }
+    var flowElements = process.children;
+    var nodeMap = {}, nodes = [], edges = [], nodeIdx = 0;
+    for (var i = 0; i < flowElements.length; i++) {
+      var el = flowElements[i], ln = getLN(el), id = el.getAttribute('id');
+      if (!id || ln === 'sequenceFlow' || ln === 'laneSet' || ln === 'lane' || ln === 'textAnnotation' || ln === 'association') continue;
+      nodeIdx++; nodeMap[id] = 'N' + nodeIdx;
+      var shape;
+      switch (ln) {
+        case 'startEvent': shape = 'start'; break;
+        case 'endEvent': shape = 'end'; break;
+        case 'exclusiveGateway': shape = 'decision'; break;
+        case 'parallelGateway': case 'inclusiveGateway': shape = 'parallel'; break;
+        case 'subProcess': case 'callActivity': shape = 'subprocess'; break;
+        case 'intermediateCatchEvent': case 'intermediateThrowEvent': case 'boundaryEvent': shape = 'event'; break;
+        default: shape = 'task'; break;
+      }
+      nodes.push({ id: 'N' + nodeIdx, name: getName(el), shape: shape });
+    }
+    for (var j = 0; j < flowElements.length; j++) {
+      var sf = flowElements[j];
+      if (getLN(sf) !== 'sequenceFlow') continue;
+      var src = sf.getAttribute('sourceRef'), tgt = sf.getAttribute('targetRef');
+      if (!src || !tgt) continue;
+      var label = sf.getAttribute('name') || '';
+      if (!label) {
+        var ce = sf.querySelector('conditionExpression, *|conditionExpression');
+        if (ce) { label = ce.textContent || ''; if (label.length > 40) label = label.substring(0, 40) + '...'; }
+      }
+      edges.push({ from: src, to: tgt, label: label });
+    }
+    var mmd = 'graph TD\n';
+    for (var n = 0; n < nodes.length; n++) {
+      var node = nodes[n], nd;
+      switch (node.shape) {
+        case 'start': case 'end': nd = '    ' + node.id + '([' + node.name + '])'; break;
+        case 'decision': nd = '    ' + node.id + '{' + node.name + '}'; break;
+        case 'parallel': nd = '    ' + node.id + '{{' + node.name + '}}'; break;
+        case 'subprocess': nd = '    ' + node.id + '[[' + node.name + ']]'; break;
+        case 'event': nd = '    ' + node.id + '((' + node.name + '))'; break;
+        default: nd = '    ' + node.id + '[' + node.name + ']'; break;
+      }
+      mmd += nd + '\n';
+    }
+    for (var e = 0; e < edges.length; e++) {
+      var fromId = nodeMap[edges[e].from], toId = nodeMap[edges[e].to];
+      if (!fromId || !toId) continue;
+      mmd += '    ' + fromId + ' -->' + (edges[e].label ? '|' + edges[e].label + '| ' : ' ') + toId + '\n';
+    }
+    if (edges.length === 0 && nodes.length > 1) {
+      for (var nc = 0; nc < nodes.length - 1; nc++) {
+        mmd += '    ' + nodes[nc].id + ' --> ' + nodes[nc + 1].id + '\n';
+      }
+    }
+    return mmd;
+  } catch(er) { return 'graph TD\n    A[流程] --> B[解析异常]'; }
+}
+
+function bpmnXmlToFlowSteps(xml) {
+  try {
+    var parser = new DOMParser();
+    var doc = parser.parseFromString(xml, 'application/xml');
+    var process = doc.querySelector('process, *|process');
+    if (!process) return [];
+    function getLN(el) { return el.localName || el.nodeName.replace(/^.*:/, ''); }
+    var flowElements = process.children, result = [];
+    for (var i = 0; i < flowElements.length; i++) {
+      var el = flowElements[i], ln = getLN(el);
+      if (ln === 'sequenceFlow' || ln === 'laneSet' || ln === 'lane' || ln === 'textAnnotation' || ln === 'association') continue;
+      var name = el.getAttribute('name') || el.getAttribute('id') || ln;
+      var type;
+      switch (ln) {
+        case 'startEvent': type = 'trigger'; break;
+        case 'endEvent': type = 'end'; break;
+        case 'exclusiveGateway': case 'parallelGateway': case 'inclusiveGateway': type = 'decision'; break;
+        case 'userTask': case 'manualTask': type = 'human_review'; break;
+        case 'serviceTask': case 'scriptTask': case 'businessRuleTask': type = 'ai_analyze'; break;
+        case 'sendTask': case 'receiveTask': type = 'system_call'; break;
+        default: type = 'ai_analyze'; break;
+      }
+      result.push({ name: name, type: type, desc: '', role_label: '', parallel_group: 'none', branches: [] });
+    }
+    return result;
+  } catch(er) { return []; }
+}
+
+function flowStepsToBpmnXml(steps) {
+  var xml = '<?xml version="1.0" encoding="UTF-8"?>\n' +
+    '<bpmn:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_1" targetNamespace="http://bpmn.io/schema/bpmn">\n' +
+    '  <bpmn:process id="Process_1" isExecutable="false">\n';
+  var prevId = null, x = 150, y = 150;
+  for (var i = 0; i < steps.length; i++) {
+    var step = steps[i], id = 'Activity_' + (i + 1);
+    var elXml;
+    switch (step.type) {
+      case 'trigger': elXml = '<bpmn:startEvent id="' + id + '" name="' + escapeXml(step.name) + '"/>'; break;
+      case 'end': elXml = '<bpmn:endEvent id="' + id + '" name="' + escapeXml(step.name) + '"/>'; break;
+      case 'decision': elXml = '<bpmn:exclusiveGateway id="' + id + '" name="' + escapeXml(step.name) + '"/>'; break;
+      case 'human_review': elXml = '<bpmn:userTask id="' + id + '" name="' + escapeXml(step.name) + '"/>'; break;
+      default: elXml = '<bpmn:task id="' + id + '" name="' + escapeXml(step.name) + '"/>'; break;
+    }
+    xml += '    ' + elXml + '\n';
+    if (prevId) { xml += '    <bpmn:sequenceFlow id="Flow_' + i + '" sourceRef="' + prevId + '" targetRef="' + id + '"/>\n'; }
+    prevId = id; x += 180;
+  }
+  xml += '  </bpmn:process>\n  <bpmndi:BPMNDiagram id="BPMNDiagram_1"><bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_1"/></bpmndi:BPMNDiagram>\n</bpmn:definitions>';
+  return xml;
+}
+
+function escapeXml(str) {
+  return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&apos;');
 }
 
 function autoGenFlowPrompt() {
@@ -1227,22 +1576,44 @@ function smartMermaidFromSteps(steps) {
 
 // Flow health check
 function checkFlowHealth() {
-  var steps = getFlowSteps();
+  var flowMode = ssGet('f_flowMode', 'bpmn');
   var issues = [];
-  var hasTrigger = false, hasEnd = false;
-  for (var i = 0; i < steps.length; i++) {
-    if (steps[i].type === 'trigger') hasTrigger = true;
-    if (steps[i].type === 'end') hasEnd = true;
-    if (steps[i].type === 'decision') {
-      var br = steps[i].branches || [];
-      if (br.length === 0) issues.push('\u6B65\u9AA4' + (i+1) + ' \u201C' + steps[i].name + '\u201D \u662F\u5224\u65AD\u8282\u70B9\uFF0C\u4F46\u672A\u5B9A\u4E49\u5206\u652F');
+  
+  if (flowMode === 'bpmn') {
+    var bpmnXml = ssGet('f_bpmnXml', '');
+    if (!bpmnXml) {
+      issues.push('尚未创建 BPMN 流程图');
+    } else {
+      var hasStart = bpmnXml.indexOf('startEvent') !== -1;
+      var hasEnd = bpmnXml.indexOf('endEvent') !== -1;
+      var hasTask = bpmnXml.indexOf('<bpmn:task') !== -1 || bpmnXml.indexOf('<bpmn:userTask') !== -1 || bpmnXml.indexOf('<bpmn:serviceTask') !== -1 || bpmnXml.indexOf('Task') !== -1;
+      var hasGateway = bpmnXml.indexOf('Gateway') !== -1;
+      if (!hasStart) issues.push('缺少开始事件 (StartEvent)');
+      if (!hasEnd) issues.push('缺少结束事件 (EndEvent)');
+      if (!hasTask) issues.push('建议添加至少一个任务节点');
+      if (hasGateway) {
+        var flowCount = (bpmnXml.match(/sequenceFlow/g) || []).length;
+        if (flowCount < 2) issues.push('网关缺少足够的连接线');
+      }
     }
+  } else {
+    var steps = getFlowSteps();
+    var hasTrigger = false, hasEnd = false;
+    for (var i = 0; i < steps.length; i++) {
+      if (steps[i].type === 'trigger') hasTrigger = true;
+      if (steps[i].type === 'end') hasEnd = true;
+      if (steps[i].type === 'decision') {
+        var br = steps[i].branches || [];
+        if (br.length === 0) issues.push('\u6B65\u9AA4' + (i+1) + ' \u201C' + steps[i].name + '\u201D \u662F\u5224\u65AD\u8282\u70B9\uFF0C\u4F46\u672A\u5B9A\u4E49\u5206\u652F');
+      }
+    }
+    if (!hasTrigger) issues.push('\u7F3A\u5C11\u89E6\u53D1/\u8D77\u59CB\u6B65\u9AA4');
+    if (!hasEnd) issues.push('\u7F3A\u5C11\u7ED3\u675F/\u5F52\u6863\u6B65\u9AA4');
+    var complexity = ssGet('f_flowComplexity', 'standard');
+    if (complexity === 'simple' && steps.length > 4) issues.push('\u7B80\u5355\u6D41\u7A0B\u5EFA\u8BAE\u22644\u6B65\uFF0C\u5F53\u524D' + steps.length + '\u6B65');
+    if (complexity === 'standard' && steps.length > 7) issues.push('\u6807\u51C6\u6D41\u7A0B\u5EFA\u8BAE\u22647\u6B65\uFF0C\u5F53\u524D' + steps.length + '\u6B65');
   }
-  if (!hasTrigger) issues.push('\u7F3A\u5C11\u89E6\u53D1/\u8D77\u59CB\u6B65\u9AA4');
-  if (!hasEnd) issues.push('\u7F3A\u5C11\u7ED3\u675F/\u5F52\u6863\u6B65\u9AA4');
-  var complexity = ssGet('f_flowComplexity', 'standard');
-  if (complexity === 'simple' && steps.length > 4) issues.push('\u7B80\u5355\u6D41\u7A0B\u5EFA\u8BAE\u22644\u6B65\uFF0C\u5F53\u524D' + steps.length + '\u6B65');
-  if (complexity === 'standard' && steps.length > 7) issues.push('\u6807\u51C6\u6D41\u7A0B\u5EFA\u8BAE\u22647\u6B65\uFF0C\u5F53\u524D' + steps.length + '\u6B65');
+  
   var score = issues.length === 0 ? 'healthy' : (issues.length <= 2 ? 'warning' : 'error');
   return { score: score, issues: issues };
 }
@@ -1869,7 +2240,12 @@ function generateDeliverablePreview() {
   }
   if (!dsRows) dsRows = '<tr><td colspan="2">未配置</td></tr>';
 
-  // Mermaid flow
+  // BPMN / Mermaid flow
+  var bpmnSummary = '';
+  if (f.bpmnXml) {
+    var nodeCount = (f.bpmnXml.match(/<(bpmn:)?(task|userTask|serviceTask|scriptTask|manualTask|businessRuleTask|sendTask|receiveTask|startEvent|endEvent|exclusiveGateway|parallelGateway|inclusiveGateway|callActivity|subProcess)/g) || []).length;
+    bpmnSummary = '<div class="flow-health-bar healthy"><span class="health-icon">📊</span><span class="health-details"><strong>BPMN 2.0 流程模型</strong> — ' + nodeCount + ' 个节点 | 编辑模式：' + (f.flowMode === 'bpmn' ? '可视化' : 'Mermaid') + '</span></div>';
+  }
   var flowMd = '```mermaid\n' + f.mainFlow + '\n```';
 
   var html = '';
@@ -1894,6 +2270,7 @@ function generateDeliverablePreview() {
   html += '<table><tr><th>数据源名称</th><th>格式</th></tr>' + dsRows + '</table>';
 
   html += '<h2>2. 业务流程</h2>';
+  if (bpmnSummary) html += bpmnSummary;
   html += '<pre>' + flowMd + '</pre>';
   if (f.exceptionFlow !== '—') html += '<h3>异常流程</h3><p>' + escapeHtml(f.exceptionFlow) + '</p>';
   if (f.bizEvents !== '—') html += '<h3>关键业务事件</h3><p>' + escapeHtml(f.bizEvents) + '</p>';
@@ -1961,13 +2338,14 @@ function saveAllFields() {
     var el2 = document.getElementById(f2[j]);
     if (el2) ssSet(f2[j], el2.value || '');
   }
-  // Also save flow from live editor
+  // Save Mermaid code from text editor (Mermaid mode)
   var wfCode = document.getElementById('wfLiveCode');
   if (wfCode) ssSet('f_mainFlow', wfCode.value || '');
-  // 保存流程复杂度和步骤
+  // Save flow complexity
   var fcEl = document.getElementById('f_flowComplexity');
   if (fcEl) ssSet('f_flowComplexity', fcEl.value || 'standard');
-  saveFlowSteps();
+  // BPMN XML: trigger async save if modeler active
+  if (_bpmnModeler) { saveBpmnDiagram(); }
 
   // Step 3 fields
   var f3 = ['f_systemPrompt','f_persona','f_constraints','f_style','f_outputFormat'];
@@ -2033,10 +2411,22 @@ function nextStep() {
     if (!hasDs) { wfToast('请至少添加一个数据源'); return; }
   }
   
-  // Step 2 validation: at least 2 flow steps
+  // Step 2 validation: must have flow defined (BPMN or Mermaid)
   if (step === 2) {
-    var flowSteps = ssGetJSON('f_flowSteps', []);
-    if (flowSteps.length < 2) { wfToast('请至少定义2个流程步骤'); return; }
+    var flowMode = ssGet('f_flowMode', 'bpmn');
+    if (flowMode === 'bpmn') {
+      var bpmnXml = ssGet('f_bpmnXml', '');
+      if (!bpmnXml || bpmnXml.indexOf('<bpmn:task') === -1 && bpmnXml.indexOf('<bpmn:userTask') === -1 && bpmnXml.indexOf('<bpmn:serviceTask') === -1 && bpmnXml.indexOf('<bpmn:exclusiveGateway') === -1) {
+        // Check if at least has start + end + one activity
+        var hasStart = bpmnXml.indexOf('<bpmn:startEvent') !== -1;
+        var hasEnd = bpmnXml.indexOf('<bpmn:endEvent') !== -1;
+        if (!hasStart || !hasEnd) { wfToast('请在 BPMN 画布上添加开始和结束事件，以及至少一个任务节点'); return; }
+        wfToast('提示：建议添加至少一个任务节点丰富流程'); 
+      }
+    } else {
+      var mermaidCode = ssGet('f_mainFlow', '');
+      if (!mermaidCode || mermaidCode.trim().length < 10) { wfToast('请在 Mermaid 编辑器中定义流程'); return; }
+    }
   }
   
   if (step >= 7) {
@@ -2099,6 +2489,8 @@ function getAllFieldValues() {
     confidenceMid: ssGet('f_confidenceMid', '70'),
     flowComplexity: ssGet('f_flowComplexity', 'standard'),
     flowSteps: ssGetJSON('f_flowSteps', []),
+    bpmnXml: ssGet('f_bpmnXml', ''),
+    flowMode: ssGet('f_flowMode', 'bpmn'),
     protoTitle: ssGet('f_protoTitle', ''),
     protoDesc: ssGet('f_protoDesc', ''),
     uiFlow: ssGet('f_uiFlow', '')
@@ -2141,21 +2533,14 @@ function exportMarkdown() {
 
   md += '## 2. 业务流程\n\n';
   md += '| 流程复杂度 | ' + f.flowComplexity + ' |\n\n';
-  // 导出流程步骤
-  var flowStepsExport = f.flowSteps;
-  if (flowStepsExport.length > 0) {
-    md += '### 流程步骤\n\n| 序号 | 步骤名称 | 类型 | 说明 |\n|------|---------|------|------|\n';
-    for (var fs = 0; fs < flowStepsExport.length; fs++) {
-      var fse = flowStepsExport[fs];
-      var fseType = fse.type;
-      for (var ft = 0; ft < FLOW_STEP_TYPES.length; ft++) {
-        if (FLOW_STEP_TYPES[ft].value === fse.type) { fseType = FLOW_STEP_TYPES[ft].label; break; }
-      }
-      md += '| ' + (fs + 1) + ' | ' + fse.name + ' | ' + fseType + ' | ' + (fse.desc || '—') + ' |\n';
-    }
-    md += '\n';
+  // BPMN 2.0 XML — AI tool readable format
+  if (f.bpmnXml) {
+    md += '### BPMN 2.0 流程定义\n\n';
+    md += '> 以下 BPMN 2.0 XML 可直接导入 Camunda、Flowable、n8n 等 AI 工作流引擎。\n\n';
+    md += '```xml\n' + f.bpmnXml + '\n```\n\n';
   }
-  if (f.mainFlow) md += '```mermaid\n' + f.mainFlow + '\n```\n\n';
+  // Mermaid flowchart
+  if (f.mainFlow) md += '### Mermaid 流程图\n\n```mermaid\n' + f.mainFlow + '\n```\n\n';
   if (f.exceptionFlow !== '—') md += '### 异常流程\n' + f.exceptionFlow + '\n\n';
   if (f.bizEvents !== '—') md += '### 关键业务事件\n' + f.bizEvents + '\n\n';
   if (f.systems !== '—') md += '### 涉及系统/模块\n' + f.systems + '\n\n';
