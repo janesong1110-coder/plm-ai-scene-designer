@@ -1,0 +1,2297 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>PLM AI 场景设计器</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js">
+</script>
+<script src="https://cdn.tailwindcss.com">
+</script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', sans-serif; font-size: 13px; color: #2c2c2a; background: #fcfcf9; min-height: 100vh; display: flex; flex-direction: column; }
+
+/* ── Colors ── */
+:root { --primary: #2c2c2a; --accent: #e8a640; --bg: #fcfcf9; --border: #e8e4d9; --panel-bg: #fff; }
+
+/* ── Header ── */
+.app-header { background: var(--panel-bg); border-bottom: 0.5px solid var(--border); padding: 12px 24px; display: flex; align-items: center; gap: 16px; flex-shrink: 0; }
+.app-header h1 { font-size: 15px; font-weight: 500; color: var(--primary); }
+.app-header .subtitle { font-size: 12px; color: #888780; }
+.header-right { margin-left: auto; display: flex; gap: 8px; align-items: center; }
+
+/* ── Layout ── */
+.app-body { display: flex; flex: 1; min-height: 0; overflow: hidden; }
+.step-nav { width: 280px; border-right: 0.5px solid var(--border); display: flex; flex-direction: column; overflow-y: auto; flex-shrink: 0; background: #fafaf7; padding: 16px 12px; }
+.step-panel { flex: 1; display: flex; flex-direction: column; min-width: 0; min-height: 0; }
+.step-body { flex: 1; overflow-y: auto; min-height: 0; padding: 24px; }
+.step-footer { flex-shrink: 0; padding: 14px 24px; border-top: 0.5px solid var(--border); background: var(--panel-bg); display: flex; align-items: center; gap: 12px; }
+
+/* ── Step Nav Items ── */
+.step-nav-item { display: flex; align-items: flex-start; gap: 12px; padding: 12px 14px; border-radius: 8px; cursor: pointer; transition: background 0.15s; margin-bottom: 2px; position: relative; }
+.step-nav-item:hover { background: #eeedfe; }
+.step-nav-item.active { background: #eeedfe; }
+.step-nav-item.completed .step-circle { background: #00B42A; border-color: #00B42A; color: #fff; }
+.step-nav-item.active .step-circle { background: var(--accent); border-color: var(--accent); color: #fff; }
+.step-nav-item.current-step .step-circle { background: var(--accent); border-color: var(--accent); color: #fff; box-shadow: 0 0 0 3px rgba(232,166,64,0.25); }
+.step-circle { width: 32px; height: 32px; min-width: 32px; border-radius: 50%; border: 2px solid #d3d1c7; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; color: #888780; transition: all 0.2s; }
+.step-nav-info { flex: 1; min-width: 0; }
+.step-nav-title { font-size: 13px; font-weight: 500; color: var(--primary); line-height: 1.3; }
+.step-nav-desc { font-size: 11px; color: #888780; margin-top: 1px; line-height: 1.3; }
+.step-nav-item.completed .step-nav-title { color: #00B42A; }
+
+/* ── Step Panels ── */
+.step-panel-content { display: none; }
+.step-panel-content.active { display: flex; flex-direction: column; flex: 1; min-height: 0; }
+
+/* ── Form ── */
+.form-group { margin-bottom: 16px; }
+.form-label { display: block; font-size: 12px; font-weight: 500; color: #444441; margin-bottom: 5px; }
+.form-label .required { color: #e24b4a; margin-left: 2px; }
+.form-hint { font-size: 11px; color: #888780; margin-top: 3px; }
+input[type="text"], textarea, select {
+  width: 100%; padding: 8px 11px; border: 0.5px solid var(--border); border-radius: 6px;
+  font-size: 13px; color: var(--primary); background: #fff; outline: none;
+  transition: border-color 0.15s; font-family: inherit;
+}
+input[type="text"]:focus, textarea:focus, select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(232,166,64,0.1); }
+textarea { resize: vertical; min-height: 70px; line-height: 1.6; }
+select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23888780' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; padding-right: 28px; }
+.form-row-inline { display: flex; gap: 12px; align-items: flex-start; }
+.form-row-inline > * { flex: 1; }
+
+/* ── Buttons ── */
+.btn { padding: 8px 18px; border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.15s; border: none; display: inline-flex; align-items: center; gap: 6px; }
+.btn-primary { background: var(--accent); color: #fff; }
+.btn-primary:hover { background: #d4952a; }
+.btn-secondary { background: #fff; color: #444441; border: 0.5px solid var(--border); }
+.btn-secondary:hover { background: #f5f4f0; }
+.btn-outline { background: #fff; color: var(--accent); border: 0.5px solid var(--accent); }
+.btn-outline:hover { background: #fef8ef; }
+.btn-sm { padding: 5px 12px; font-size: 11px; }
+.btn-xs { padding: 3px 8px; font-size: 10px; border-radius: 4px; }
+.btn-danger { background: #fff; color: #e24b4a; border: 0.5px solid #e24b4a; }
+.btn-danger:hover { background: #fef2f2; }
+.btn-success { background: #eaf3de; color: #3b6d11; border: 0.5px solid #97c459; }
+.btn-success:hover { background: #c0dd97; }
+.btn-accent { background: var(--accent); color: #fff; }
+.btn-accent:hover { background: #d4952a; }
+
+/* ── Preset Buttons ── */
+.preset-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 16px; }
+.preset-btn {
+  padding: 10px 12px; border: 0.5px solid var(--border); border-radius: 8px;
+  background: #fafaf7; cursor: pointer; text-align: left;
+  font-size: 11px; color: #444441; line-height: 1.5;
+  transition: all 0.12s; display: flex; align-items: center; gap: 8px;
+}
+.preset-btn:hover { background: #e6f1fb; border-color: #85b7eb; }
+.preset-btn .preset-icon { font-size: 16px; flex-shrink: 0; }
+.preset-btn .preset-name { font-weight: 500; display: block; }
+.preset-btn .preset-hint { color: #888780; font-size: 10px; }
+
+/* ── Dynamic Data Source List ── */
+.datasource-entry { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; padding: 8px; background: #fafaf7; border-radius: 6px; border: 0.5px solid #ebebeb; }
+.datasource-entry input { flex: 2; padding: 6px 10px; font-size: 12px; }
+.datasource-entry select { flex: 1; padding: 6px 10px; font-size: 12px; }
+.datasource-entry .btn-remove { flex-shrink: 0; width: 28px; height: 28px; border-radius: 50%; border: 0.5px solid #e24b4a; background: #fff; color: #e24b4a; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 14px; transition: all 0.12s; }
+.datasource-entry .btn-remove:hover { background: #fef2f2; }
+
+/* ── Flow Step Entries ── */
+.flowstep-entry { display: flex; gap: 6px; align-items: center; margin-bottom: 6px; padding: 8px; background: #fafaf7; border-radius: 6px; border: 0.5px solid #ebebeb; transition: border-color 0.15s; }
+.flowstep-entry:hover { border-color: var(--accent); }
+.flowstep-entry .fs-num { width: 24px; height: 24px; min-width: 24px; border-radius: 50%; background: var(--accent); color: #fff; font-size: 11px; font-weight: 600; display: flex; align-items: center; justify-content: center; }
+.flowstep-entry .fs-name { flex: 2; min-width: 0; font-size: 12px; padding: 6px 8px; }
+.flowstep-entry .fs-type { flex: 1; min-width: 0; font-size: 12px; padding: 6px 8px; }
+.flowstep-entry .fs-desc { flex: 3; min-width: 0; font-size: 11px; padding: 6px 8px; }
+.flowstep-entry .btn-remove { flex-shrink: 0; width: 28px; height: 28px; border-radius: 50%; border: 0.5px solid #e24b4a; background: #fff; color: #e24b4a; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 14px; transition: all 0.12s; }
+.flowstep-entry .btn-remove:hover { background: #fef2f2; }
+.flowstep-entry .fs-role { width: 80px; min-width: 70px; font-size: 11px; padding: 6px 8px; color: #888780; }
+.flowstep-entry .fs-parallel { width: 70px; min-width: 60px; font-size: 11px; padding: 5px 4px; }
+
+/* Branch sub-rows inside flow step entries */
+.fs-branch-row { margin-left: 36px; padding: 4px 8px 4px 16px; border-left: 2px dotted #d3d1c7; display: flex; gap: 6px; align-items: center; margin-bottom: 4px; font-size: 11px; }
+.fs-branch-row input { flex: 1; padding: 4px 8px; font-size: 11px; }
+.fs-branch-row select { font-size: 11px; padding: 4px 4px; min-width: 70px; }
+.fs-branch-row .btn-remove { flex-shrink: 0; width: 22px; height: 22px; border-radius: 50%; border: 0.5px solid #e24b4a; background: #fff; color: #e24b4a; cursor: pointer; font-size: 11px; }
+.fs-branch-row .btn-remove:hover { background: #fef2f2; }
+
+.flowstep-header { display: flex; gap: 6px; align-items: center; margin-bottom: 6px; padding: 0 8px; }
+.flowstep-header .fs-h-num { width: 24px; }
+.flowstep-header .fs-h-label { flex: 2; font-size: 11px; color: #888780; font-weight: 500; }
+.flowstep-header .fs-h-label-type { flex: 1; font-size: 11px; color: #888780; font-weight: 500; }
+.flowstep-header .fs-h-label-desc { flex: 3; font-size: 11px; color: #888780; font-weight: 500; }
+.flowstep-header .fs-h-label-role { width: 80px; font-size: 11px; color: #888780; font-weight: 500; }
+.flowstep-header .fs-h-label-parallel { width: 70px; font-size: 11px; color: #888780; font-weight: 500; }
+.flowstep-header .fs-h-gap { width: 28px; }
+
+/* Flow health bar */
+.flow-health-bar { margin-top: 12px; padding: 10px 14px; border-radius: 8px; font-size: 11px; display: flex; align-items: center; gap: 10px; }
+.flow-health-bar.healthy { background: #eaf3de; border: 0.5px solid #97c459; color: #3b6d11; }
+.flow-health-bar.warning { background: #faeeda; border: 0.5px solid #ef9f27; color: #854f0b; }
+.flow-health-bar.error { background: #fcebeb; border: 0.5px solid #e24b4a; color: #a32d2d; }
+.flow-health-bar .health-icon { font-size: 16px; flex-shrink: 0; }
+.flow-health-bar .health-details { flex: 1; }
+.flow-health-bar .health-issue { display: block; }
+
+/* Collapsible code editor */
+.wf-collapse-bar { margin-top: 16px; padding: 8px 0; }
+.wf-collapse-bar button { padding: 6px 14px; border-radius: 6px; border: 0.5px solid var(--border); background: #fff; color: #444441; font-size: 12px; cursor: pointer; transition: all 0.12s; }
+.wf-collapse-bar button:hover { background: #f5f4f0; border-color: var(--accent); }
+.wf-full-preview { width: 100% !important; min-height: 280px; }
+
+/* ── Step 2 Workflow ── */
+.wf-section { margin-bottom: 20px; }
+.wf-section-title { font-size: 13px; font-weight: 500; color: var(--primary); margin-bottom: 10px; padding-bottom: 8px; border-bottom: 0.5px solid #ebebeb; display: flex; align-items: center; gap: 8px; }
+.wf-prompt-wrap { background: #fafaf7; border: 0.5px solid var(--border); border-radius: 8px; padding: 16px; }
+.wf-prompt-wrap textarea { background: #fff; border: 0.5px solid var(--border); font-family: 'Consolas', 'Monaco', monospace; font-size: 12px; line-height: 1.5; min-height: 120px; }
+.wf-editor-wrap { display: flex; gap: 0; border: 0.5px solid var(--border); border-radius: 8px; overflow: hidden; }
+.wf-code-pane { width: 50%; padding: 12px; background: #1e1e1e; }
+.wf-code-pane textarea { width: 100%; min-height: 300px; background: #1e1e1e; color: #d4d4d4; border: none; font-family: 'Consolas', 'Monaco', monospace; font-size: 12px; line-height: 1.6; resize: vertical; padding: 8px; }
+.wf-code-pane textarea:focus { outline: none; box-shadow: none; }
+.wf-preview-pane { width: 50%; padding: 12px; background: #fafaf7; overflow-y: auto; }
+.wf-preview-pane svg { max-width: 100%; height: auto; }
+.wf-export-bar { display: flex; gap: 8px; padding: 8px 0; align-items: center; flex-wrap: wrap; }
+.wf-export-bar .btn { font-size: 11px; padding: 5px 12px; }
+.wf-context-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+.wf-context-grid textarea { min-height: 80px; }
+
+/* ── Step 4 Capability Toggles ── */
+.capability-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 16px; }
+.capability-card { border: 0.5px solid var(--border); border-radius: 8px; padding: 14px; cursor: pointer; transition: all 0.15s; background: #fafaf7; }
+.capability-card:hover { border-color: #85b7eb; }
+.capability-card.enabled { border-color: var(--accent); background: #fef8ef; }
+.capability-card .cap-icon { font-size: 20px; margin-bottom: 6px; }
+.capability-card .cap-name { font-size: 13px; font-weight: 500; color: var(--primary); }
+.capability-card .cap-desc { font-size: 11px; color: #888780; margin-top: 2px; }
+.capability-card input[type="checkbox"] { display: none; }
+
+/* ── Confidence Slider ── */
+.conf-slider-row { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+.conf-slider-row label { font-size: 12px; color: #444441; white-space: nowrap; min-width: 70px; }
+.conf-slider-row input[type="range"] { flex: 1; accent-color: var(--accent); }
+.conf-slider-row .conf-val { font-size: 12px; font-weight: 600; color: var(--accent); min-width: 36px; text-align: right; }
+
+/* ── Deliverable Preview ── */
+.deliverable-preview { background: #fff; border: 0.5px solid var(--border); border-radius: 8px; padding: 28px; max-width: 860px; font-size: 13px; line-height: 1.7; }
+.deliverable-preview h1 { font-size: 20px; font-weight: 500; color: var(--primary); border-bottom: 1px solid var(--border); padding-bottom: 12px; margin-bottom: 16px; }
+.deliverable-preview h2 { font-size: 15px; font-weight: 500; color: var(--primary); margin: 20px 0 10px; }
+.deliverable-preview h3 { font-size: 13px; font-weight: 500; color: #444441; margin: 14px 0 6px; }
+.deliverable-preview table { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 12px; }
+.deliverable-preview th { background: #f5f4f0; text-align: left; padding: 7px 10px; border: 0.5px solid var(--border); font-weight: 500; }
+.deliverable-preview td { padding: 7px 10px; border: 0.5px solid var(--border); color: #444441; }
+.deliverable-preview pre { background: #f5f4f0; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 12px; }
+.deliverable-preview ul { padding-left: 20px; margin: 8px 0; }
+.deliverable-preview li { margin-bottom: 4px; }
+
+/* ── Tags ── */
+.tag { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 500; margin: 2px; }
+.tag-accent { background: #fef8ef; color: #854f0b; border: 0.5px solid var(--accent); }
+.tag-blue { background: #e6f1fb; color: #185fa5; }
+.tag-green { background: #eaf3de; color: #3b6d11; }
+.tag-purple { background: #eeedfe; color: #3c3489; }
+
+/* ── Toast ── */
+.toast { position: fixed; bottom: 24px; right: 24px; background: var(--primary); color: #fff; padding: 10px 20px; border-radius: 8px; font-size: 13px; z-index: 9999; opacity: 0; transform: translateY(10px); transition: all 0.3s; pointer-events: none; }
+.toast.show { opacity: 1; transform: translateY(0); }
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #d3d1c7; border-radius: 3px; }
+
+/* ── Empty State ── */
+.empty-state { text-align: center; padding: 40px 20px; color: #888780; }
+.empty-state .empty-icon { font-size: 40px; margin-bottom: 12px; }
+
+/* ── Prototype Step ── */
+.proto-form-area { max-width: 700px; }
+</style>
+</head>
+<body>
+
+<!-- ── Header ── -->
+<header class="app-header">
+  <div>
+    <h1><i class="fa-solid fa-robot" style="color:var(--accent);margin-right:6px;"></i>PLM AI 场景设计器</h1>
+    <div class="subtitle">基于 Windchill + 开源工具栈 · 7步向导式设计</div>
+  </div>
+  <div class="header-right">
+    <button class="btn btn-success" onclick="exportMarkdown()"><i class="fa-solid fa-file-lines"></i> 导出 Markdown</button>
+    <button class="btn btn-secondary" onclick="exportHTML()"><i class="fa-solid fa-file-code"></i> 导出 HTML 原型</button>
+  </div>
+</header>
+
+<!-- ── Body ── -->
+<div class="app-body">
+
+  <!-- Step Navigation -->
+  <div class="step-nav" id="stepNav">
+  </div>
+
+  <!-- Step Content Area -->
+  <div class="step-panel" id="stepPanel">
+    <div class="step-body" id="stepBody"></div>
+    <div class="step-footer" id="stepFooter">
+      <button class="btn btn-secondary" id="btnPrev" onclick="prevStep()" style="display:none;"><i class="fa-solid fa-arrow-left"></i> 上一步</button>
+      <span style="flex:1;"></span>
+      <span id="stepIndicator" style="font-size:12px;color:#888780;"></span>
+      <button class="btn btn-accent" id="btnNext" onclick="nextStep()">下一步 <i class="fa-solid fa-arrow-right"></i></button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+mermaid.initialize({ startOnLoad: false, theme: 'neutral', securityLevel: 'loose', flowchart: { curve: 'basis', useMaxWidth: true } });
+
+// ==============================
+// CONSTANTS
+// ==============================
+var STEPS = [
+  { num: 1, icon: '\uD83D\uDCCB', title: '场景定义', desc: '基本信息与Agent定位' },
+  { num: 2, icon: '\uD83D\uDD04', title: '业务流程', desc: '流程提示词与流程图' },
+  { num: 3, icon: '\uD83E\uDD16', title: 'Agent角色与提示词', desc: 'System Prompt' },
+  { num: 4, icon: '\u2699\uFE0F', title: 'Agent能力与推理', desc: '能力配置与决策' },
+  { num: 5, icon: '\uD83D\uDEE1\uFE0F', title: '护栏与容错', desc: '安全与兜底' },
+  { num: 6, icon: '\uD83C\uDFA8', title: '交互原型', desc: '交互+界面' },
+  { num: 7, icon: '\uD83D\uDCE6', title: '生成交付物', desc: '导出文档' }
+];
+
+var DATASOURCE_FORMATS = ['windchill 数据对象', 'PDF', 'EXCEL文件', 'Word文件', 'Jason文件', '其他Agent输出'];
+
+var FLOW_STEP_TYPES = [
+  { value: 'trigger', label: '触发接收', icon: '\u26A1', shape: 'startend', color: '#e6f1fb' },
+  { value: 'data_load', label: '数据加载', icon: '\uD83D\uDCE5', shape: 'process', color: '#eeedfe' },
+  { value: 'ai_analyze', label: 'AI分析处理', icon: '\uD83E\uDDE0', shape: 'process', color: '#eeedfe' },
+  { value: 'human_review', label: '人工审核', icon: '\uD83D\uDC64', shape: 'manual', color: '#faeeda' },
+  { value: 'decision', label: '判断决策', icon: '\u2753', shape: 'decision', color: '#faeeda' },
+  { value: 'system_call', label: '系统调用', icon: '\uD83D\uDD17', shape: 'process', color: '#e6f1fb' },
+  { value: 'output', label: '输出结果', icon: '\uD83D\uDCC4', shape: 'output', color: '#eaf3de' },
+  { value: 'end', label: '结束归档', icon: '\u2705', shape: 'end', color: '#eaf3de' }
+];
+
+var FLOW_COMPLEXITY_OPTIONS = [
+  { value: 'simple', label: '简单线性', desc: '3-4步，无分支，快速完成' },
+  { value: 'standard', label: '标准流程', desc: '5-7步，含1个判断点' },
+  { value: 'complex', label: '复杂流程', desc: '8步以上，含多分支/多判断' }
+];
+
+var PRESETS = {
+  '变更影响分析': {
+    name: '变更影响分析', pain: '变更的波及范围难以快速评估，涉及零件、工艺、文档、供应商多维度，人工评估耗时长且容易遗漏关联项。',
+    trigger: '用户在Windchill中提交变更请求或ECO工单创建/更新时自动触发',
+    output: '变更影响分析报告（受影响零件清单、工艺变更建议、关联文档列表、风险等级评分）',
+    datasources: [{name:'Windchill EBOM/MBOM',format:'windchill 数据对象'},{name:'变更历史记录',format:'windchill 数据对象'},{name:'零件关联关系',format:'windchill 数据对象'}],
+    role: 'ECO 发起人、PDM 管理员、工程师',
+    compliance: 'IATF 16949、ISO 9001',
+    aiCapability: '自动识别变更影响的零件/工艺/文档，多维度波及分析，风险等级评估，生成结构化影响报告',
+    flowComplexity: 'standard',
+    flowSteps: [
+      {name:'变更事件接收',type:'trigger',desc:'接收ECO工单创建/更新事件'},
+      {name:'加载关联数据',type:'data_load',desc:'从Windchill加载EBOM/MBOM和变更历史'},
+      {name:'波及范围分析',type:'ai_analyze',desc:'AI分析变更影响的零件、工艺、文档'},
+      {name:'风险评估',type:'decision',desc:'判断变更风险等级(高/中/低)',branches:[{label:'低风险→继续',targetStepIdx:null},{label:'中高风险→人工审核',targetStepIdx:4}]},
+      {name:'人工审核确认',type:'human_review',desc:'高风险变更需PDM管理员审核',role_label:'PDM管理员'},
+      {name:'生成影响报告',type:'output',desc:'输出变更影响分析报告并通知相关人员'},
+      {name:'归档记录',type:'end',desc:'变更记录存入知识库'}
+    ]
+  },
+  'BOM一致性校验': {
+    name: 'BOM一致性校验', pain: 'EBOM与MBOM之间存在差异，手工比对效率低，容易导致制造错误和批次报废。',
+    trigger: 'EBOM发布或MBOM变更时自动触发',
+    output: 'BOM一致性校验报告（差异清单、影响评估、修正建议）',
+    datasources: [{name:'Windchill EBOM',format:'windchill 数据对象'},{name:'MBOM',format:'windchill 数据对象'},{name:'工艺路线数据',format:'windchill 数据对象'}],
+    role: 'PDM管理员、工艺工程师',
+    compliance: 'IATF 16949',
+    aiCapability: '智能比对各BOM层级差异，识别数量/零件号/层级不一致，生成修正建议',
+    flowComplexity: 'standard',
+    flowSteps: [
+      {name:'BOM变更事件触发',type:'trigger',desc:'EBOM发布或MBOM变更事件触发'},
+      {name:'加载EBOM与MBOM',type:'data_load',desc:'从Windchill拉取EBOM/MBOM及工艺路线'},
+      {name:'结构比对分析',type:'ai_analyze',desc:'AI逐层比对零件号、数量、层级差异'},
+      {name:'差异审核',type:'human_review',desc:'工艺工程师审核差异清单',role_label:'工艺工程师'},
+      {name:'判定一致性',type:'decision',desc:'判断BOM是否一致(通过/不通过)',branches:[{label:'一致→生成报告',targetStepIdx:5},{label:'不一致→修正建议',targetStepIdx:4}]},
+      {name:'生成校验报告',type:'output',desc:'输出BOM一致性校验报告及修正建议'},
+      {name:'完成归档',type:'end',desc:'报告归档，通知相关人员'}
+    ]
+  },
+  '技术文档问答': {
+    name: '技术文档问答', pain: '技术人员查找规范文档耗时长，跨文档信息关联困难，新员工学习曲线陡峭。',
+    trigger: '用户通过自然语言提问或在知识库搜索框输入问题',
+    output: '基于文档内容的精准答案 + 来源文档链接 + 相关标准条款 + 可信度评分',
+    datasources: [{name:'Windchill文档库',format:'windchill 数据对象'},{name:'技术规范',format:'PDF'},{name:'历史设计文档',format:'Word文件'}],
+    role: '研发工程师、质量工程师',
+    compliance: 'ISO 13485',
+    aiCapability: 'RAG检索增强生成，跨文档语义理解，多文档关联推理，可信度评估',
+    flowComplexity: 'simple',
+    flowSteps: [
+      {name:'用户提问',type:'trigger',desc:'用户输入自然语言问题'},
+      {name:'检索文档库',type:'data_load',desc:'向量检索Windchill文档库和PDF规范'},
+      {name:'AI理解与生成',type:'ai_analyze',desc:'AI理解问题意图，从检索结果中提取答案'},
+      {name:'可信度校验',type:'decision',desc:'判断答案可信度是否达标',branches:[{label:'达标→返回答案',targetStepIdx:4},{label:'不达标→降级提示',targetStepIdx:4}]},
+      {name:'返回答案',type:'output',desc:'返回精准答案+来源链接+可信度评分'}
+    ]
+  },
+  '仿真结果解读': {
+    name: '仿真结果解读', pain: '仿真结果需要专业人员解读，瓶颈在于专家资源，报告生成耗时长。',
+    trigger: '仿真计算完成后自动触发，或在仿真结果页面由用户点击触发',
+    output: '仿真结果解读报告（关键参数分析、与设计规范对比、优化建议）',
+    datasources: [{name:'仿真结果文件',format:'PDF'},{name:'设计规范',format:'PDF'},{name:'历史仿真案例库',format:'windchill 数据对象'}],
+    role: '仿真工程师、设计工程师',
+    compliance: 'AS9100',
+    aiCapability: '自动解析仿真参数，对比设计规范阈值，趋势异常检测，生成专业解读报告',
+    flowComplexity: 'standard',
+    flowSteps: [
+      {name:'仿真完成触发',type:'trigger',desc:'仿真计算完成后自动触发'},
+      {name:'解析结果文件',type:'data_load',desc:'解析仿真结果PDF，提取关键参数'},
+      {name:'参数对比分析',type:'ai_analyze',desc:'AI对比仿真结果与设计规范/历史案例'},
+      {name:'异常检测',type:'decision',desc:'判断是否存在参数超标或异常趋势',branches:[{label:'通过→生成报告',targetStepIdx:null},{label:'异常→专家复核',targetStepIdx:4}]},
+      {name:'专家复核',type:'human_review',desc:'异常结果需仿真工程师复核确认',role_label:'仿真工程师'},
+      {name:'生成解读报告',type:'output',desc:'输出仿真结果解读报告及优化建议'},
+      {name:'归档案例',type:'end',desc:'结果和报告存入案例库'}
+    ]
+  },
+  '需求追溯分析': {
+    name: '需求追溯分析', pain: '需求变更时难以追踪受影响的设计和测试，追溯矩阵维护成本高。',
+    trigger: '需求文档更新或用户发起追溯分析',
+    output: '需求追溯矩阵 + 变更影响预测 + 未覆盖需求告警',
+    datasources: [{name:'需求管理工具',format:'windchill 数据对象'},{name:'设计数据',format:'windchill 数据对象'},{name:'测试用例库',format:'EXCEL文件'}],
+    role: '系统工程师、需求工程师',
+    compliance: 'ISO 26262',
+    aiCapability: '自动建立需求-设计-测试追溯链，覆盖度检测，变更影响预测',
+    flowComplexity: 'complex',
+    flowSteps: [
+      {name:'需求变更/追溯请求',type:'trigger',desc:'需求文档更新或用户发起追溯分析'},
+      {name:'加载需求与设计数据',type:'data_load',desc:'从需求工具和Windchill加载需求/设计/测试数据'},
+      {name:'关联追溯分析',type:'ai_analyze',desc:'AI建立需求↔设计↔测试的追溯链'},
+      {name:'覆盖度检查',type:'decision',desc:'判断是否存在未覆盖需求',branches:[{label:'全量→影响评估',targetStepIdx:4},{label:'有缺口→告警',targetStepIdx:5}]},
+      {name:'影响范围评估',type:'ai_analyze',desc:'评估需求变更对设计和测试的影响范围'},
+      {name:'工程师确认',type:'human_review',desc:'系统工程师确认追溯矩阵完整性',role_label:'系统工程师'},
+      {name:'生成追溯报告',type:'output',desc:'输出需求追溯矩阵+变更影响+告警清单'},
+      {name:'更新追溯库',type:'end',desc:'追溯结果更新到需求管理工具'}
+    ]
+  },
+  '合规风险预警': {
+    name: '合规风险预警', pain: '设计过程中难以实时判断合规性，合规审查往往后置导致大量返工。',
+    trigger: '设计数据提交审核时自动触发',
+    output: '合规风险预警报告（不合规项清单、法律/标准条款引用、整改建议）',
+    datasources: [{name:'合规标准库',format:'PDF'},{name:'设计数据',format:'windchill 数据对象'},{name:'历史审核记录',format:'windchill 数据对象'}],
+    role: '合规工程师、设计经理',
+    compliance: 'IATF 16949',
+    aiCapability: '自动比对法规条款，识别不合规项，引用标准条款原文，生成整改建议',
+    flowComplexity: 'standard',
+    flowSteps: [
+      {name:'设计提交审核触发',type:'trigger',desc:'设计数据提交到审核流程时触发'},
+      {name:'加载合规标准',type:'data_load',desc:'从合规标准库加载适用标准和历史审核记录'},
+      {name:'合规比对分析',type:'ai_analyze',desc:'AI逐条比对设计数据与法规标准条款'},
+      {name:'合规判定',type:'decision',desc:'判断是否存在不合规项',branches:[{label:'合规→生成报告',targetStepIdx:null},{label:'不合规→人工审查',targetStepIdx:4}]},
+      {name:'人工审查',type:'human_review',desc:'合规工程师审查AI发现的不合规项',role_label:'合规工程师'},
+      {name:'输出预警报告',type:'output',desc:'生成合规风险预警报告+整改建议+标准引用'},
+      {name:'归档追踪',type:'end',desc:'风险和整改记录跟踪归档'}
+    ]
+  }
+};
+
+var PRESET_LIST = ['变更影响分析','BOM一致性校验','技术文档问答','仿真结果解读','需求追溯分析','合规风险预警'];
+var PRESET_ICONS = ['\uD83D\uDD0D','\u2705','\uD83D\uDCAC','\uD83D\uDCCA','\uD83D\uDD17','\u26A0\uFE0F'];
+
+// ==============================
+// SESSION STORAGE HELPERS
+// ==============================
+function ssGet(key, fallback) {
+  try { var v = sessionStorage.getItem(key); return v !== null ? v : (fallback !== undefined ? fallback : ''); }
+  catch(e) { return fallback !== undefined ? fallback : ''; }
+}
+function ssSet(key, val) {
+  try { sessionStorage.setItem(key, val); } catch(e) {}
+}
+function ssGetJSON(key, fallback) {
+  try { var v = sessionStorage.getItem(key); return v ? JSON.parse(v) : (fallback !== undefined ? fallback : []); }
+  catch(e) { return fallback !== undefined ? fallback : []; }
+}
+
+// ==============================
+// CURRENT STEP
+// ==============================
+function getCurrentStep() { return parseInt(ssGet('wizard_step', '1')); }
+function setCurrentStep(n) { ssSet('wizard_step', String(n)); }
+
+// ==============================
+// RENDER STEP NAV
+// ==============================
+function renderStepNav() {
+  var current = getCurrentStep();
+  var nav = document.getElementById('stepNav');
+  var html = '';
+  for (var i = 0; i < STEPS.length; i++) {
+    var s = STEPS[i];
+    var cls = 'step-nav-item';
+    var circleText = String(s.num);
+    if (s.num < current) { cls += ' completed'; circleText = '\u2713'; }
+    else if (s.num === current) { cls += ' active current-step'; }
+    html += '<div class="' + cls + '" onclick="goToStep(' + s.num + ')">';
+    html += '<div class="step-circle">' + circleText + '</div>';
+    html += '<div class="step-nav-info"><div class="step-nav-title">' + s.icon + ' ' + s.title + '</div>';
+    html += '<div class="step-nav-desc">' + s.desc + '</div></div>';
+    html += '</div>';
+  }
+  nav.innerHTML = html;
+}
+
+// ==============================
+// RENDER CURRENT STEP
+// ==============================
+function renderCurrentStep() {
+  var step = getCurrentStep();
+  renderStepNav();
+  var body = document.getElementById('stepBody');
+  var footer = document.getElementById('stepFooter');
+  var btnPrev = document.getElementById('btnPrev');
+  var btnNext = document.getElementById('btnNext');
+  var indicator = document.getElementById('stepIndicator');
+
+  indicator.textContent = '步骤 ' + step + ' / ' + STEPS.length;
+
+  if (step <= 1) { btnPrev.style.display = 'none'; } else { btnPrev.style.display = ''; }
+  if (step >= 7) { btnNext.textContent = '\u2713 完成设计'; }
+  else { btnNext.textContent = '下一步 \u2192'; }
+
+  switch(step) {
+    case 1: body.innerHTML = renderStep1(); break;
+    case 2: body.innerHTML = renderStep2(); break;
+    case 3: body.innerHTML = renderStep3(); break;
+    case 4: body.innerHTML = renderStep4(); break;
+    case 5: body.innerHTML = renderStep5(); break;
+    case 6: body.innerHTML = renderStep6(); break;
+    case 7: body.innerHTML = renderStep7(); break;
+  }
+
+  // Post-render hooks
+  if (step === 1) { restoreDataSources(); }
+  if (step === 2) { setTimeout(restoreStep2, 100); }
+  if (step === 4) updateCapUI();
+  if (step === 6) restoreStep6();
+  if (step === 7) generateDeliverablePreview();
+}
+
+// ==============================
+// STEP 1: 场景定义
+// ==============================
+function renderStep1() {
+  var html = '';
+  html += '<div style="max-width:860px;">';
+
+  // Preset buttons
+  html += '<div class="form-group">';
+  html += '<div class="form-label">预设场景模板</div>';
+  html += '<div class="preset-grid">';
+  for (var i = 0; i < PRESET_LIST.length; i++) {
+    var name = PRESET_LIST[i];
+    html += '<button class="preset-btn" onclick="applyPreset(\'' + escapeHtml(name) + '\')">';
+    html += '<span class="preset-icon">' + PRESET_ICONS[i] + '</span>';
+    html += '<div><span class="preset-name">' + escapeHtml(name) + '</span></div>';
+    html += '</button>';
+  }
+  html += '</div></div>';
+
+  // Agent定位概述
+  html += '<div class="form-group">';
+  html += '<div class="form-label">Agent定位概述</div>';
+  html += '<input type="text" id="f_agentPosition" value="' + escapeHtml(ssGet('f_agentPosition')) + '" oninput="onFormChange()" placeholder="例：基于Windchill数据的智能变更影响分析助手"/>';
+  html += '</div>';
+
+  // 场景名称
+  html += '<div class="form-group">';
+  html += '<div class="form-label">场景名称 <span class="required">*</span></div>';
+  html += '<input type="text" id="f_name" value="' + escapeHtml(ssGet('f_name')) + '" oninput="onFormChange()" placeholder="例：变更影响分析 Agent"/>';
+  html += '</div>';
+
+  // 目标用户角色
+  html += '<div class="form-group">';
+  html += '<div class="form-label">目标用户角色 <span class="required">*</span></div>';
+  html += '<input type="text" id="f_role" value="' + escapeHtml(ssGet('f_role')) + '" oninput="onFormChange()" placeholder="例：研发工程师、PDM 管理员"/>';
+  html += '</div>';
+
+  // 业务痛点
+  html += '<div class="form-group">';
+  html += '<div class="form-label">业务痛点描述 <span class="required">*</span></div>';
+  html += '<textarea id="f_pain" rows="3" oninput="onFormChange()" placeholder="描述当前存在的问题和低效环节...">' + escapeHtml(ssGet('f_pain')) + '</textarea>';
+  html += '</div>';
+
+  // 触发条件
+  html += '<div class="form-group">';
+  html += '<div class="form-label">触发条件</div>';
+  html += '<textarea id="f_trigger" rows="2" oninput="onFormChange()" placeholder="什么操作或事件会启动该 AI 场景...">' + escapeHtml(ssGet('f_trigger')) + '</textarea>';
+  html += '</div>';
+
+  // 期望输出
+  html += '<div class="form-group">';
+  html += '<div class="form-label">期望输出</div>';
+  html += '<textarea id="f_output" rows="2" oninput="onFormChange()" placeholder="Agent 应该产出什么结果...">' + escapeHtml(ssGet('f_output')) + '</textarea>';
+  html += '</div>';
+
+  // 核心数据源 - Dynamic List
+  html += '<div class="form-group">';
+  html += '<div class="form-label">核心数据源 <span class="required">*</span></div>';
+  html += '<div id="datasourceList"></div>';
+  html += '<button class="btn btn-outline btn-sm" onclick="addDataSourceEntry()" style="margin-top:6px;"><i class="fa-solid fa-plus"></i> 添加数据源</button>';
+  html += '</div>';
+
+  // 行业合规约束
+  html += '<div class="form-group">';
+  html += '<div class="form-label">行业合规约束</div>';
+  html += '<input type="text" id="f_compliance" value="' + escapeHtml(ssGet('f_compliance')) + '" oninput="onFormChange()" placeholder="例：IATF 16949、ISO 13485、AS9100"/>';
+  html += '</div>';
+
+  // ── 新字段：AI能力 ──
+  html += '<div class="form-group">';
+  html += '<div class="form-label">AI能力</div>';
+  html += '<div class="form-hint">描述 AI Agent 在本场景中的核心能力和角色定位</div>';
+  html += '<textarea id="f_aiCapability" rows="3" oninput="onFormChange()" placeholder="例：自动分析变更波及范围、智能比对各维度数据、生成结构化报告...">' + escapeHtml(ssGet('f_aiCapability')) + '</textarea>';
+  html += '</div>';
+
+  html += '</div>';
+  return html;
+}
+
+// ── Flow Complexity ──
+function setFlowComplexity(val) {
+  ssSet('f_flowComplexity', val);
+  var hidden = document.getElementById('f_flowComplexity');
+  if (hidden) hidden.value = val;
+  onFormChange();
+}
+
+// ── Flow Steps Management ──
+function getFlowSteps() {
+  return ssGetJSON('f_flowSteps', []);
+}
+
+function setFlowSteps(steps) {
+  ssSet('f_flowSteps', JSON.stringify(steps));
+}
+
+function addFlowStepEntry(name, type, desc) {
+  var steps = getFlowSteps();
+  var entry = { name: name || '', type: type || 'ai_analyze', desc: desc || '' };
+  if (type === 'decision') entry.branches = [{ label: '通过', targetStepIdx: null }, { label: '不通过', targetStepIdx: null }];
+  steps.push(entry);
+  setFlowSteps(steps);
+  renderFlowStepList();
+  onFormChange();
+}
+
+function removeFlowStepEntry(index) {
+  var steps = getFlowSteps();
+  if (steps.length <= 2) return; // keep at least 2 steps
+  steps.splice(index, 1);
+  setFlowSteps(steps);
+  renderFlowStepList();
+  onFormChange();
+}
+
+function saveFlowSteps() {
+  var steps = [];
+  var entries = document.querySelectorAll('.flowstep-entry');
+  var stepIdx = 0;
+  for (var i = 0; i < entries.length; i++) {
+    var e = entries[i];
+    var nameEl = e.querySelector('.fs-name');
+    var typeEl = e.querySelector('.fs-type');
+    var descEl = e.querySelector('.fs-desc');
+    var roleEl = e.querySelector('.fs-role');
+    var parallelEl = e.querySelector('.fs-parallel');
+    if (nameEl && typeEl) {
+      var step = { name: nameEl.value, type: typeEl.value, desc: descEl ? descEl.value : '' };
+      if (roleEl && roleEl.value) step.role_label = roleEl.value;
+      if (parallelEl && parallelEl.value !== 'none') step.parallel_group = parallelEl.value;
+      // Capture branches (only read from DOM after renderFlowStepList renders them)
+      var branchRows = e.querySelectorAll('.fs-branch-row');
+      if (branchRows.length > 0) {
+        step.branches = [];
+        for (var b = 0; b < branchRows.length; b++) {
+          var br = branchRows[b];
+          var labelEl = br.querySelector('.fs-branch-label');
+          var targetEl = br.querySelector('.fs-branch-target');
+          if (labelEl) {
+            var brEntry = { label: labelEl.value };
+            if (targetEl && targetEl.value !== '') brEntry.targetStepIdx = parseInt(targetEl.value);
+            else brEntry.targetStepIdx = null;
+            step.branches.push(brEntry);
+          }
+        }
+      }
+      steps.push(step);
+      stepIdx++;
+    }
+  }
+  setFlowSteps(steps);
+}
+
+function renderFlowStepList() {
+  var steps = getFlowSteps();
+  if (steps.length === 0) {
+    steps = [
+      { name: '触发接收', type: 'trigger', desc: '用户或系统事件触发' },
+      { name: '加载数据', type: 'data_load', desc: '从数据源读取相关数据' },
+      { name: 'AI分析', type: 'ai_analyze', desc: 'AI分析/识别/提取关键信息' },
+      { name: '结果输出', type: 'output', desc: '输出/生成报告' },
+      { name: '完成归档', type: 'end', desc: '结束并归档' }
+    ];
+    setFlowSteps(steps);
+  }
+  var container = document.getElementById('flowstepList');
+  if (!container) return;
+  var complexity = ssGet('f_flowComplexity', 'standard');
+  var html = '';
+  for (var i = 0; i < steps.length; i++) {
+    var s = steps[i];
+    var isDecision = (s.type === 'decision');
+    html += '<div class="flowstep-entry">';
+    html += '<span class="fs-num">' + (i + 1) + '</span>';
+    html += '<input type="text" class="fs-name" value="' + escapeHtml(s.name) + '" placeholder="步骤名称" oninput="saveFlowSteps();onFormChange();"/>';
+    html += '<select class="fs-type" onchange="saveFlowSteps();renderFlowStepList();onFormChange();">';
+    for (var j = 0; j < FLOW_STEP_TYPES.length; j++) {
+      var t = FLOW_STEP_TYPES[j];
+      var sel = (s.type === t.value) ? ' selected' : '';
+      html += '<option value="' + t.value + '"' + sel + '>' + t.icon + ' ' + t.label + '</option>';
+    }
+    html += '</select>';
+    html += '<input type="text" class="fs-desc" value="' + escapeHtml(s.desc) + '" placeholder="简要说明" oninput="saveFlowSteps();onFormChange();"/>';
+    // Role label
+    html += '<input type="text" class="fs-role" value="' + escapeHtml(s.role_label || '') + '" placeholder="角色(可选)" oninput="saveFlowSteps();onFormChange();"/>';
+    // Parallel group selector
+    html += '<select class="fs-parallel" onchange="saveFlowSteps();onFormChange();">';
+    html += '<option value="none"' + (!s.parallel_group ? ' selected' : '') + '>--</option>';
+    html += '<option value="A"' + (s.parallel_group === 'A' ? ' selected' : '') + '>并行A</option>';
+    html += '<option value="B"' + (s.parallel_group === 'B' ? ' selected' : '') + '>并行B</option>';
+    html += '<option value="C"' + (s.parallel_group === 'C' ? ' selected' : '') + '>并行C</option>';
+    html += '</select>';
+    html += '<button class="btn-remove" onclick="removeFlowStepEntry(' + i + ')" title="移除">&times;</button>';
+    html += '</div>';
+    // Branch sub-rows for decision steps
+    if (isDecision && complexity !== 'simple') {
+      var branches = s.branches || [];
+      if (branches.length === 0) branches = [{ label: '通过', targetStepIdx: null }, { label: '不通过', targetStepIdx: null }];
+      for (var b = 0; b < branches.length; b++) {
+        var br = branches[b];
+        html += '<div class="fs-branch-row">';
+        html += '<span style="font-size:10px;color:#888780;min-width:16px;">' + (b === 0 ? '✓' : '✗') + '</span>';
+        html += '<input type="text" class="fs-branch-label" value="' + escapeHtml(br.label || '') + '" placeholder="分支名称" oninput="saveFlowSteps();onFormChange();" style="flex:2;min-width:0;"/>';
+        html += '<select class="fs-branch-target" onchange="saveFlowSteps();onFormChange();" style="flex:1;min-width:0;">';
+        html += '<option value="">→ 下一节点</option>';
+        for (var tgt = 0; tgt < steps.length; tgt++) {
+          if (tgt === i) continue; // skip self
+          var tgtSel = (br.targetStepIdx === tgt) ? ' selected' : '';
+          html += '<option value="' + tgt + '"' + tgtSel + '>→ ' + escapeHtml(steps[tgt].name) + '</option>';
+        }
+        html += '</select>';
+        html += '<button class="btn-remove" onclick="removeBranchFromStep(' + i + ',' + b + ')" title="移除分支">&times;</button>';
+        html += '</div>';
+      }
+      html += '<div class="fs-branch-row" style="border-left-style:dashed;justify-content:flex-start;gap:8px;">';
+      html += '<button class="btn btn-xs btn-outline" onclick="addBranchToStep(' + i + ')">+ 添加分支</button>';
+      html += '</div>';
+    }
+  }
+  container.innerHTML = html;
+}
+
+function restoreFlowSteps() {
+  var steps = getFlowSteps();
+  if (steps.length === 0) {
+    renderFlowStepList();
+  } else {
+    renderFlowStepList();
+  }
+}
+
+function addBranchToStep(stepIdx) {
+  var steps = getFlowSteps();
+  if (!steps[stepIdx] || !steps[stepIdx].branches) {
+    if (!steps[stepIdx].branches) steps[stepIdx].branches = [];
+  }
+  steps[stepIdx].branches.push({ label: '', targetStepIdx: null });
+  setFlowSteps(steps);
+  renderFlowStepList();
+  onFormChange();
+}
+
+function removeBranchFromStep(stepIdx, branchIdx) {
+  var steps = getFlowSteps();
+  if (steps[stepIdx] && steps[stepIdx].branches && steps[stepIdx].branches.length > 1) {
+    steps[stepIdx].branches.splice(branchIdx, 1);
+    setFlowSteps(steps);
+    renderFlowStepList();
+    onFormChange();
+  }
+}
+
+// ==============================
+// DYNAMIC DATA SOURCES
+// ==============================
+function addDataSourceEntry(name, format) {
+  var list = ssGetJSON('f_datasources', []);
+  name = name || '';
+  format = format || DATASOURCE_FORMATS[0];
+  list.push({ name: name, format: format });
+  ssSet('f_datasources', JSON.stringify(list));
+  renderDataSourceList();
+}
+
+function removeDataSourceEntry(index) {
+  var list = ssGetJSON('f_datasources', []);
+  if (list.length <= 1) return; // keep at least 1
+  list.splice(index, 1);
+  ssSet('f_datasources', JSON.stringify(list));
+  renderDataSourceList();
+  onFormChange();
+}
+
+function saveDataSources() {
+  var list = [];
+  var entries = document.querySelectorAll('.datasource-entry');
+  for (var i = 0; i < entries.length; i++) {
+    var entry = entries[i];
+    var nameInput = entry.querySelector('.ds-name');
+    var formatSelect = entry.querySelector('.ds-format');
+    if (nameInput && formatSelect) {
+      list.push({ name: nameInput.value, format: formatSelect.value });
+    }
+  }
+  ssSet('f_datasources', JSON.stringify(list));
+}
+
+function restoreDataSources() {
+  renderDataSourceList();
+}
+
+function renderDataSourceList() {
+  var list = ssGetJSON('f_datasources', []);
+  if (list.length === 0) list = [{ name: '', format: DATASOURCE_FORMATS[0] }];
+  var container = document.getElementById('datasourceList');
+  if (!container) return;
+  var html = '';
+  for (var i = 0; i < list.length; i++) {
+    var entry = list[i];
+    html += '<div class="datasource-entry">';
+    html += '<input type="text" class="ds-name" value="' + escapeHtml(entry.name) + '" placeholder="数据源名称" oninput="saveDataSources();onFormChange();" style="flex:2;"/>';
+    html += '<select class="ds-format" onchange="saveDataSources();onFormChange();" style="flex:1;">';
+    for (var j = 0; j < DATASOURCE_FORMATS.length; j++) {
+      var sel = (entry.format === DATASOURCE_FORMATS[j]) ? ' selected' : '';
+      html += '<option value="' + escapeHtml(DATASOURCE_FORMATS[j]) + '"' + sel + '>' + escapeHtml(DATASOURCE_FORMATS[j]) + '</option>';
+    }
+    html += '</select>';
+    html += '<button class="btn-remove" onclick="removeDataSourceEntry(' + i + ')" title="移除">&times;</button>';
+    html += '</div>';
+  }
+  container.innerHTML = html;
+}
+
+// ==============================
+// PRESETS
+// ==============================
+function applyPreset(name) {
+  var p = PRESETS[name];
+  if (!p) return;
+  ssSet('f_name', p.name);
+  ssSet('f_role', p.role || '');
+  ssSet('f_pain', p.pain);
+  ssSet('f_trigger', p.trigger);
+  ssSet('f_output', p.output);
+  ssSet('f_datasources', JSON.stringify(p.datasources));
+  ssSet('f_compliance', p.compliance || '');
+  ssSet('f_agentPosition', p.name + ' - AI智能助手');
+  // 方案B：新增字段
+  ssSet('f_aiCapability', p.aiCapability || '');
+  if (p.flowComplexity) ssSet('f_flowComplexity', p.flowComplexity);
+  if (p.flowSteps) ssSet('f_flowSteps', JSON.stringify(p.flowSteps));
+  else ssSet('f_flowSteps', '');
+  renderCurrentStep();
+  restoreDataSources();
+  onFormChange();
+  wfToast('已应用预设: ' + name);
+}
+
+// ==============================
+// STEP 2: 业务流程
+// ==============================
+function renderStep2() {
+  var html = '';
+  html += '<div style="max-width:100%;">';
+
+  // ── 流程复杂度级别 ──
+  html += '<div class="form-group">';
+  html += '<div class="form-label">流程复杂度级别 <span class="required">*</span></div>';
+  html += '<div style="display:flex;gap:8px;">';
+  var curComplexity = ssGet('f_flowComplexity', 'standard');
+  for (var c = 0; c < FLOW_COMPLEXITY_OPTIONS.length; c++) {
+    var opt = FLOW_COMPLEXITY_OPTIONS[c];
+    var checked = (curComplexity === opt.value) ? ' checked' : '';
+    html += '<label style="flex:1;padding:10px 12px;border-radius:8px;border:0.5px solid ' + (curComplexity === opt.value ? 'var(--accent)' : 'var(--border)') + ';background:' + (curComplexity === opt.value ? '#fef8ef' : '#fafaf7') + ';cursor:pointer;transition:all 0.12s;" onmouseover="this.style.borderColor=\'var(--accent)\'" onmouseout="if(!this.querySelector(\'input\').checked)this.style.borderColor=\'var(--border)\'">';
+    html += '<input type="radio" name="f_flowComplexity_val" value="' + opt.value + '"' + checked + ' onchange="setFlowComplexity(\'' + opt.value + '\')" style="display:none;"/>';
+    html += '<div style="font-size:13px;font-weight:500;color:var(--primary);">' + escapeHtml(opt.label) + '</div>';
+    html += '<div style="font-size:11px;color:#888780;margin-top:2px;">' + escapeHtml(opt.desc) + '</div>';
+    html += '</label>';
+  }
+  html += '</div>';
+  html += '<input type="hidden" id="f_flowComplexity" value="' + escapeHtml(curComplexity) + '"/>';
+  html += '</div>';
+
+  // ── 流程步骤动态编辑列表 ──
+  html += '<div class="form-group">';
+  html += '<div class="form-label">流程步骤定义 <span class="required">*</span></div>';
+  html += '<div class="form-hint">定义业务流程的每个步骤，将直接映射为流程图节点。步骤类型决定节点形状。</div>';
+  html += '<div class="flowstep-header">';
+  html += '<span class="fs-h-num"></span>';
+  html += '<span class="fs-h-label">步骤名称</span>';
+  html += '<span class="fs-h-label-type">步骤类型</span>';
+  html += '<span class="fs-h-label-desc">简要说明</span>';
+  html += '<span class="fs-h-label-role">角色</span>';
+  html += '<span class="fs-h-label-parallel">并行组</span>';
+  html += '<span class="fs-h-gap"></span>';
+  html += '</div>';
+  html += '<div id="flowstepList"></div>';
+  html += '<div style="margin-top:8px;display:flex;gap:8px;align-items:center;">';
+  html += '<button class="btn btn-outline btn-sm" onclick="addFlowStepEntry()"><i class="fa-solid fa-plus"></i> 添加步骤</button>';
+  html += '<button class="btn btn-accent btn-sm" onclick="genFlowFromSteps()" style="margin-left:auto;"><i class="fa-solid fa-play"></i> 生成流程图</button>';
+  html += '</div>';
+  // Health check bar
+  html += '<div id="flowHealthBar" class="flow-health-bar" style="display:none;"></div>';
+  html += '</div>';
+
+  // Flowchart Preview (always visible, full width by default)
+  html += '<div class="wf-section">';
+  html += '<div class="wf-section-title"><span>流程图预览</span>';
+  html += '<div class="wf-export-bar" style="margin-left:auto;padding:0;">';
+  html += '<button class="btn btn-sm btn-secondary" onclick="wfExportMmd()"><i class="fa-regular fa-file-code"></i> .mmd</button>';
+  html += '<button class="btn btn-sm btn-secondary" onclick="wfExportSVG()"><i class="fa-regular fa-file-image"></i> SVG</button>';
+  html += '<button class="btn btn-sm btn-secondary" onclick="wfExportPNG()"><i class="fa-regular fa-image"></i> PNG</button>';
+  html += '<button class="btn btn-sm btn-secondary" onclick="wfCopyMermaid()"><i class="fa-regular fa-copy"></i> 复制代码</button>';
+  html += '</div>';
+  html += '</div>';
+  html += '<div class="wf-preview-pane wf-full-preview" id="wfLivePreviewWrap" style="border:0.5px solid var(--border);border-radius:8px;">';
+  html += '<div class="empty-state"><div class="empty-icon">\uD83D\uDCC8</div><p>点击「生成流程图」按钮查看</p></div>';
+  html += '</div></div>';
+
+  // Collapsible Code Editor
+  html += '<div class="wf-collapse-bar">';
+  html += '<button onclick="toggleCodeEditor()" id="btnToggleEditor"><i class="fa-solid fa-code"></i> 高级编辑 ▾</button>';
+  html += '</div>';
+  html += '<div id="wfEditorWrap" style="display:none;">';
+  html += '<div class="wf-editor-wrap">';
+  html += '<div class="wf-code-pane">';
+  html += '<textarea id="wfLiveCode" oninput="wfLivePreview()" placeholder="graph TD\n    A[开始] --> B[处理]..."></textarea>';
+  html += '</div>';
+  html += '<div style="width:50%;padding:12px;background:#fafaf7;overflow-y:auto;display:none;" id="wfCodePreviewPane">';
+  html += '</div></div>';
+  html += '<button class="btn btn-sm btn-outline" onclick="wfLiveFormat()" style="margin-top:6px;"><i class="fa-solid fa-indent"></i> 格式化</button>';
+  html += '<textarea id="f_mainFlow" style="display:none;">' + escapeHtml(ssGet('f_mainFlow')) + '</textarea>';
+  html += '</div>';
+
+  // ── 业务上下文 ──
+  html += '<div class="wf-section" style="margin-top:20px;">';
+  html += '<div class="wf-section-title"><i class="fa-solid fa-puzzle-piece" style="color:var(--accent);"></i> <span>业务上下文</span></div>';
+  html += '<div class="wf-context-grid">';
+  html += '<div><div class="form-label">异常流程说明</div><textarea id="f_exceptionFlow" oninput="onFormChange()" placeholder="描述异常分支和错误处理...">' + escapeHtml(ssGet('f_exceptionFlow')) + '</textarea></div>';
+  html += '<div><div class="form-label">关键业务事件</div><textarea id="f_bizEvents" oninput="onFormChange()" placeholder="列出关键业务事件节点...">' + escapeHtml(ssGet('f_bizEvents')) + '</textarea></div>';
+  html += '<div><div class="form-label">涉及系统/模块</div><textarea id="f_systems" oninput="onFormChange()" placeholder="Windchill、ERP、MES...">' + escapeHtml(ssGet('f_systems')) + '</textarea></div>';
+  html += '</div></div>';
+
+  html += '</div>';
+  return html;
+}
+
+function restoreStep2() {
+  var code = ssGet('f_mainFlow');
+  if (code) {
+    var el = document.getElementById('wfLiveCode');
+    if (el) { el.value = code; setTimeout(wfLiveRenderNow, 200); }
+  }
+  restoreFlowSteps();
+  setTimeout(function() { renderFlowHealth(); }, 100);
+}
+
+function autoGenFlowPrompt() {
+  var name = ssGet('f_name', '未命名场景');
+  var role = ssGet('f_role', '工程师');
+  var pain = ssGet('f_pain', '待填写');
+  var trigger = ssGet('f_trigger', '用户触发');
+  var output = ssGet('f_output', '分析报告');
+  var complexity = ssGet('f_flowComplexity', 'standard');
+  var datasources = ssGetJSON('f_datasources', []);
+  var dsStr = '';
+  for (var i = 0; i < datasources.length; i++) {
+    dsStr += '- ' + datasources[i].name + ' (' + datasources[i].format + ')\n';
+  }
+  if (!dsStr) dsStr = '- Windchill 数据\n';
+
+  // 方案B：从用户定义的流程步骤构建提示词
+  var flowSteps = ssGetJSON('f_flowSteps', []);
+  var stepsStr = '';
+  if (flowSteps.length > 0) {
+    for (var s = 0; s < flowSteps.length; s++) {
+      var fst = flowSteps[s];
+      // 查找步骤类型标签
+      var typeLabel = fst.type;
+      for (var t = 0; t < FLOW_STEP_TYPES.length; t++) {
+        if (FLOW_STEP_TYPES[t].value === fst.type) { typeLabel = FLOW_STEP_TYPES[t].label; break; }
+      }
+      stepsStr += (s + 1) + '. [' + typeLabel + '] ' + fst.name;
+      if (fst.desc) stepsStr += ' - ' + fst.desc;
+      stepsStr += '\n';
+    }
+  } else {
+    // 回退到默认模板（向后兼容）
+    stepsStr += '1. 触发接收 - 用户或系统事件触发\n';
+    stepsStr += '2. 从数据源读取/加载相关数据\n';
+    stepsStr += '3. AI分析/识别/提取关键信息\n';
+    stepsStr += '4. 判断/校验/审核结果\n';
+    stepsStr += '5. 输出/生成报告并通知用户\n';
+    stepsStr += '6. 结束/归档\n';
+  }
+
+  var prompt = '场景: ' + name + '\n\n';
+  prompt += '用户角色: ' + role + '\n';
+  prompt += '业务痛点: ' + pain + '\n';
+  prompt += 'AI能力: ' + ssGet('f_aiCapability', '未定义') + '\n';
+  prompt += '复杂度: ' + complexity + '\n\n';
+  prompt += '触发条件: ' + trigger + '\n';
+  prompt += '期望输出: ' + output + '\n\n';
+  prompt += '数据源:\n' + dsStr + '\n';
+  prompt += '流程步骤:\n' + stepsStr;
+
+  ssSet('f_flowPrompt', prompt);
+  // Prompt is no longer displayed in UI — use genFlowFromSteps instead
+}
+
+
+// Legacy savePrompt — no longer used, prompt area removed
+function savePrompt() {}
+
+var _wfDebounceTimer = null;
+
+function genFlowFromSteps() {
+  var flowSteps = ssGetJSON('f_flowSteps', []);
+  if (flowSteps.length === 0) {
+    wfToast('请先定义流程步骤');
+    return;
+  }
+  saveFlowSteps();
+  // Re-read to get latest branches from DOM
+  flowSteps = ssGetJSON('f_flowSteps', []);
+  var code = smartMermaidFromSteps(flowSteps);
+  var codeEl = document.getElementById('wfLiveCode');
+  if (codeEl) codeEl.value = code;
+  ssSet('f_mainFlow', code);
+  wfLiveRenderNow();
+  renderFlowHealth();
+  wfToast('流程图已生成');
+}
+
+function toggleCodeEditor() {
+  var wrap = document.getElementById('wfEditorWrap');
+  var btn = document.getElementById('btnToggleEditor');
+  if (!wrap || !btn) return;
+  if (wrap.style.display === 'none') {
+    wrap.style.display = '';
+    btn.innerHTML = '<i class="fa-solid fa-code"></i> 收起编辑 ▴';
+  } else {
+    wrap.style.display = 'none';
+    btn.innerHTML = '<i class="fa-solid fa-code"></i> 高级编辑 ▾';
+  }
+}
+
+// Legacy: kept for backward compatibility with autoGenMainFlow
+function genFlowFromPrompt() {
+  genFlowFromSteps();
+}
+
+// 方案B：基于流程步骤精确生成 Mermaid
+function smartMermaidFromSteps(steps) {
+  var lines = [];
+  lines.push('graph TD');
+  var nodeDefs = [];
+  var edges = [];
+  var nodeId = 0;
+  var complexity = ssGet('f_flowComplexity', 'standard');
+  var bizEvents = (ssGet('f_bizEvents', '') || '').replace(/[,，]/g, '|');
+  var exceptionText = (ssGet('f_exceptionFlow', '') || '').trim();
+  var systems = (ssGet('f_systems', '') || '').trim();
+
+  function getStepConfig(type) {
+    for (var i = 0; i < FLOW_STEP_TYPES.length; i++) {
+      if (FLOW_STEP_TYPES[i].value === type) return FLOW_STEP_TYPES[i];
+    }
+    return { shape: 'process', color: '#eeedfe', label: type };
+  }
+
+  // Build node labels with role_label support
+  for (var s = 0; s < steps.length; s++) {
+    nodeId++;
+    var st = steps[s];
+    var cfg = getStepConfig(st.type);
+    var id = 'N' + nodeId;
+    var label = st.name;
+    if (st.role_label) label += '\\n[' + st.role_label + ']';
+    else if (st.desc && st.desc.length > 0 && st.name.length + st.desc.length < 24) {
+      label = st.name + '\\n' + st.desc;
+    }
+
+    var def = '';
+    switch (cfg.shape) {
+      case 'startend': def = id + '([' + label + '])'; break;
+      case 'process': def = id + '[' + label + ']'; break;
+      case 'decision': def = id + '{' + label + '}'; break;
+      case 'manual': def = id + '[/' + label + '/]'; break;
+      case 'output': def = id + '[' + label + ']'; break;
+      case 'end': def = id + '([' + label + '])'; break;
+      default: def = id + '[' + label + ']';
+    }
+    nodeDefs.push('    ' + def);
+  }
+
+  // Handle parallel groups
+  var parallelSkip = {};
+  for (var p = 0; p < steps.length; p++) {
+    if (parallelSkip[p]) continue;
+    var pg = steps[p].parallel_group;
+    if (pg && pg !== 'none' && complexity !== 'simple') {
+      var pgMembers = [p];
+      for (var q = p + 1; q < steps.length; q++) {
+        if (steps[q].parallel_group === pg) { pgMembers.push(q); parallelSkip[q] = true; }
+        else break;
+      }
+      if (pgMembers.length > 1) {
+        var prevNode = p > 0 ? ('N' + p) : null;
+        var pgIds = pgMembers.map(function(m) { return 'N' + (m + 1); });
+        if (prevNode) {
+          edges.push('    ' + prevNode + ' --> ' + pgIds.join(' & '));
+        }
+        var lastPgId = 'N' + (pgMembers[pgMembers.length - 1] + 1);
+        for (var r = 0; r < pgMembers.length - 1; r++) {
+          // No edges within parallel group
+        }
+        if (pgMembers[pgMembers.length - 1] + 1 < steps.length) {
+          edges.push('    ' + lastPgId + ' --> ' + 'N' + (pgMembers[pgMembers.length - 1] + 2));
+        }
+        p = pgMembers[pgMembers.length - 1];
+        continue;
+      }
+    }
+    // Normal edge
+    if (p < steps.length - 1) {
+      var skipEdge = false;
+      // Don't add edge if next node is in same parallel group
+      if (steps[p + 1] && steps[p + 1].parallel_group && steps[p + 1].parallel_group !== 'none') {
+        var nextPg = steps[p + 1].parallel_group;
+        var allInSame = false;
+        for (var ck = 0; ck < steps.length; ck++) {
+          if (steps[ck] && steps[ck].parallel_group === nextPg) {
+            allInSame = true; break;
+          }
+        }
+        if (allInSame && complexity !== 'simple') skipEdge = true;
+      }
+      if (!skipEdge) {
+        edges.push('    N' + (p + 1) + ' --> ' + 'N' + (p + 2));
+      }
+    }
+  }
+
+  // Handle decision branches (complexity-aware)
+  for (var d = 0; d < steps.length; d++) {
+    var dst = steps[d];
+    if (dst.type !== 'decision') continue;
+    var decisionId = 'N' + (d + 1);
+    var branches = dst.branches || [];
+    
+    if (complexity === 'simple') {
+      // Simple: no branch edges, just pass-through
+      continue;
+    }
+
+    if (branches.length === 0) {
+      // No branches defined: use exception flow text as fallback
+      var excLabel = exceptionText ? exceptionText.substring(0, 15) : '\u26A0 异常处理';
+      var excId = 'EXC' + d;
+      nodeDefs.push('    ' + excId + '[' + excLabel + ']');
+      var nextAfterDec = 'N' + (d + 2);
+      var existsNext = (d + 1 < steps.length);
+      // Update the linear edge to be labeled
+      for (var ee = 0; ee < edges.length; ee++) {
+        if (edges[ee] === '    ' + decisionId + ' --> ' + nextAfterDec) {
+          edges[ee] = '    ' + decisionId + ' -->|\u901A\u8FC7| ' + nextAfterDec;
+          break;
+        }
+      }
+      edges.push('    ' + decisionId + ' -->|\u4E0D\u901A\u8FC7| ' + excId);
+      if (existsNext) edges.push('    ' + excId + ' --> ' + nextAfterDec);
+      continue;
+    }
+
+    // User-defined branches
+    var linearNext = (d + 1 < steps.length) ? ('N' + (d + 2)) : null;
+    for (var b = 0; b < branches.length; b++) {
+      var br = branches[b];
+      var brLabel = br.label || ('分支' + (b + 1));
+      var brTarget;
+      if (br.targetStepIdx !== null && br.targetStepIdx !== undefined && br.targetStepIdx >= 0 && br.targetStepIdx < steps.length) {
+        brTarget = 'N' + (br.targetStepIdx + 1);
+      } else {
+        brTarget = linearNext;
+      }
+      if (!brTarget) continue;
+      // Check if edge already exists (from linear generation)
+      var edgeExists = false;
+      for (var ee2 = 0; ee2 < edges.length; ee2++) {
+        if (edges[ee2] === '    ' + decisionId + ' --> ' + brTarget ||
+            edges[ee2].indexOf(decisionId + ' -->|') === 4) {
+          if (edges[ee2] === '    ' + decisionId + ' --> ' + brTarget) {
+            edges[ee2] = '    ' + decisionId + ' -->|' + brLabel + '| ' + brTarget;
+          }
+          edgeExists = true;
+          break;
+        }
+      }
+      if (!edgeExists) {
+        edges.push('    ' + decisionId + ' -->|' + brLabel + '| ' + brTarget);
+      }
+    }
+  }
+
+  // Business context: systems annotation
+  var sysList = [];
+  if (systems) {
+    sysList = systems.match(/[\u4e00-\u9fa5\w]+/g) || [];
+  }
+  if (sysList.length > 0) {
+    var sysComment = '    %% \u6D89\u53CA\u7CFB\u7EDF: ' + sysList.join(', ');
+    lines.push(sysComment);
+  }
+
+  // Complexity-level annotations
+  if (complexity === 'complex') {
+    lines.push('    %% \u590D\u6742\u6D41\u7A0B - ' + steps.length + ' \u6B65, \u542B\u591A\u5206\u652F');
+  } else if (complexity === 'simple') {
+    lines.push('    %% \u7B80\u5355\u7EBF\u6027 - ' + steps.length + ' \u6B65');
+  }
+
+  lines = lines.concat(nodeDefs);
+  lines = lines.concat(edges);
+
+  // Styles
+  for (var si = 0; si < steps.length; si++) {
+    var sId = 'N' + (si + 1);
+    var sCfg = getStepConfig(steps[si].type);
+    // Check if this step matches a business event → highlight
+    var isHighlighted = false;
+    if (bizEvents && bizEvents.length > 1) {
+      var evPat = new RegExp(steps[si].name.split('').join('.*?'));
+      if (bizEvents.indexOf(steps[si].name) !== -1) isHighlighted = true;
+    }
+    var baseStyle = '';
+    switch (sCfg.shape) {
+      case 'startend': baseStyle = 'fill:#e6f1fb,stroke:#85b7eb'; break;
+      case 'process': baseStyle = 'fill:#eeedfe,stroke:#afa9ec'; break;
+      case 'decision': baseStyle = 'fill:#faeeda,stroke:#ef9f27'; break;
+      case 'manual': baseStyle = 'fill:#faeeda,stroke:#ef9f27,stroke-dasharray:5'; break;
+      case 'output': baseStyle = 'fill:#eaf3de,stroke:#97c459'; break;
+      case 'end': baseStyle = 'fill:#eaf3de,stroke:#97c459'; break;
+    }
+    if (isHighlighted) baseStyle = 'fill:#fef8ef,stroke:#e8a640,stroke-width:2';
+    lines.push('    style ' + sId + ' ' + baseStyle);
+  }
+
+  // Exception node styles
+  for (var exc = 0; exc < lines.length; exc++) {
+    if (lines[exc].indexOf('EXC') === 5) {
+      lines.push('    style ' + lines[exc].split('[')[0].trim() + ' fill:#fcebeb,stroke:#e24b4a');
+    }
+  }
+
+  return lines.join('\n');
+}
+
+// Flow health check
+function checkFlowHealth() {
+  var steps = getFlowSteps();
+  var issues = [];
+  var hasTrigger = false, hasEnd = false;
+  for (var i = 0; i < steps.length; i++) {
+    if (steps[i].type === 'trigger') hasTrigger = true;
+    if (steps[i].type === 'end') hasEnd = true;
+    if (steps[i].type === 'decision') {
+      var br = steps[i].branches || [];
+      if (br.length === 0) issues.push('\u6B65\u9AA4' + (i+1) + ' \u201C' + steps[i].name + '\u201D \u662F\u5224\u65AD\u8282\u70B9\uFF0C\u4F46\u672A\u5B9A\u4E49\u5206\u652F');
+    }
+  }
+  if (!hasTrigger) issues.push('\u7F3A\u5C11\u89E6\u53D1/\u8D77\u59CB\u6B65\u9AA4');
+  if (!hasEnd) issues.push('\u7F3A\u5C11\u7ED3\u675F/\u5F52\u6863\u6B65\u9AA4');
+  var complexity = ssGet('f_flowComplexity', 'standard');
+  if (complexity === 'simple' && steps.length > 4) issues.push('\u7B80\u5355\u6D41\u7A0B\u5EFA\u8BAE\u22644\u6B65\uFF0C\u5F53\u524D' + steps.length + '\u6B65');
+  if (complexity === 'standard' && steps.length > 7) issues.push('\u6807\u51C6\u6D41\u7A0B\u5EFA\u8BAE\u22647\u6B65\uFF0C\u5F53\u524D' + steps.length + '\u6B65');
+  var score = issues.length === 0 ? 'healthy' : (issues.length <= 2 ? 'warning' : 'error');
+  return { score: score, issues: issues };
+}
+
+function renderFlowHealth() {
+  var health = checkFlowHealth();
+  var container = document.getElementById('flowHealthBar');
+  if (!container) return;
+  var icon = health.score === 'healthy' ? '\u2714\uFE0F' : (health.score === 'warning' ? '\u26A0\uFE0F' : '\u274C');
+  var label = health.score === 'healthy' ? '\u6D41\u7A0B\u5B8C\u6574' : (health.score === 'warning' ? '\u5B58\u5728\u6539\u8FDB\u70B9' : '\u9700\u8981\u4FEE\u590D');
+  var html = '<span class="health-icon">' + icon + '</span><span style="font-weight:500;">' + label + '</span>';
+  if (health.issues.length > 0) {
+    html += '<span class="health-details">';
+    for (var i = 0; i < health.issues.length; i++) {
+      html += '<span class="health-issue">\u2022 ' + health.issues[i] + '</span>';
+    }
+    html += '</span>';
+  }
+  container.className = 'flow-health-bar ' + health.score;
+  container.innerHTML = html;
+  container.style.display = '';
+}
+
+// Smart Template Engine
+function smartMermaidEngine(prompt) {
+  var lower = prompt.toLowerCase();
+  var nodes = [];
+  var nodeId = 0;
+
+  // Trigger / start
+  if (lower.indexOf('触发') !== -1 || lower.indexOf('接收') !== -1 || lower.indexOf('提交') !== -1) {
+    nodeId++; nodes.push({ id: 'N' + nodeId, type: 'startend', label: '触发/接收' });
+  } else {
+    nodeId++; nodes.push({ id: 'N' + nodeId, type: 'startend', label: '开始' });
+  }
+
+  // Data loading
+  var hasData = false;
+  var dsKeywords = ['数据源', '读取', '加载', 'windchill', 'pdf', '文件', '数据库'];
+  for (var i = 0; i < dsKeywords.length; i++) {
+    if (lower.indexOf(dsKeywords[i]) !== -1) { hasData = true; break; }
+  }
+  if (hasData) {
+    nodeId++; nodes.push({ id: 'N' + nodeId, type: 'process', label: '数据加载\\n读取关联数据源' });
+  }
+
+  // Analysis
+  var analysisKeywords = ['分析', '识别', '提取', '解析', '比对', '评估', '追溯', '解读', '推理'];
+  var hasAnalysis = false;
+  var analysisLabel = 'AI智能分析';
+  for (var j = 0; j < analysisKeywords.length; j++) {
+    if (lower.indexOf(analysisKeywords[j]) !== -1) {
+      hasAnalysis = true;
+      analysisLabel = analysisKeywords[j].charAt(0).toUpperCase() + analysisKeywords[j].slice(1) + '处理';
+      break;
+    }
+  }
+  if (hasAnalysis || hasData || nodeId >= 2) {
+    nodeId++; nodes.push({ id: 'N' + nodeId, type: 'process', label: analysisLabel });
+  }
+
+  // Decision
+  var decKeywords = ['判断', '是否', '审核', '审批', '校验', '检查', '合规', '验证', '确认'];
+  var hasDecision = false;
+  var decLabel = '结果校验';
+  for (var k = 0; k < decKeywords.length; k++) {
+    if (lower.indexOf(decKeywords[k]) !== -1) {
+      hasDecision = true;
+      decLabel = decKeywords[k].charAt(0).toUpperCase() + decKeywords[k].slice(1);
+      break;
+    }
+  }
+  if (hasDecision) {
+    nodeId++; nodes.push({ id: 'N' + nodeId, type: 'decision', label: decLabel + '?' });
+  }
+
+  // Manual intervention
+  if (lower.indexOf('人工') !== -1 || lower.indexOf('手动') !== -1) {
+    nodeId++; nodes.push({ id: 'N' + nodeId, type: 'manual', label: '人工介入' });
+  }
+
+  // Loop back
+  var hasLoop = false;
+  var loopKeywords = ['循环', '重新', '再次', '迭代', '重试'];
+  for (var l = 0; l < loopKeywords.length; l++) {
+    if (lower.indexOf(loopKeywords[l]) !== -1) { hasLoop = true; break; }
+  }
+
+  // Exception
+  var hasException = false;
+  var excKeywords = ['异常', '失败', '错误', '超时', '驳回'];
+  for (var m = 0; m < excKeywords.length; m++) {
+    if (lower.indexOf(excKeywords[m]) !== -1) { hasException = true; break; }
+  }
+
+  // Output
+  var outputKeywords = ['输出', '生成', '导出', '通知', '报告', '推送'];
+  var hasOutput = false;
+  for (var n = 0; n < outputKeywords.length; n++) {
+    if (lower.indexOf(outputKeywords[n]) !== -1) { hasOutput = true; break; }
+  }
+  if (hasOutput) {
+    nodeId++; nodes.push({ id: 'N' + nodeId, type: 'output', label: '输出结果\\n生成报告' });
+  }
+
+  // End
+  var endKeywords = ['结束', '完成', '归档'];
+  var endLabel = '完成';
+  for (var o = 0; o < endKeywords.length; o++) {
+    if (lower.indexOf(endKeywords[o]) !== -1) {
+      endLabel = endKeywords[o].charAt(0).toUpperCase() + endKeywords[o].slice(1);
+      break;
+    }
+  }
+  nodeId++; nodes.push({ id: 'N' + nodeId, type: 'end', label: endLabel });
+
+  // Assemble Mermaid
+  var lines = [];
+  lines.push('graph TD');
+  var nodeDefs = [];
+  var edges = [];
+  var prevId = null;
+
+  for (var p = 0; p < nodes.length; p++) {
+    var nd = nodes[p];
+    var id = nd.id;
+    var def = '';
+    switch(nd.type) {
+      case 'startend':
+        def = id + '([' + nd.label + '])'; break;
+      case 'process':
+        def = id + '[' + nd.label + ']'; break;
+      case 'decision':
+        def = id + '{' + nd.label + '}'; break;
+      case 'manual':
+        def = id + '[/' + nd.label + '/]'; break;
+      case 'output':
+        def = id + '[' + nd.label + ']'; break;
+      case 'end':
+        def = id + '([' + nd.label + '])'; break;
+      default:
+        def = id + '[' + nd.label + ']';
+    }
+    nodeDefs.push('    ' + def);
+
+    if (prevId !== null) {
+      edges.push('    ' + prevId + ' --> ' + id);
+    }
+    prevId = id;
+  }
+
+  // Handle decision branches
+  if (hasDecision) {
+    var decNode = null;
+    for (var q = 0; q < nodes.length; q++) {
+      if (nodes[q].type === 'decision') { decNode = nodes[q]; break; }
+    }
+    if (decNode && hasException) {
+      var excNodeId = 'EXC' + (nodeId + 1);
+      nodeDefs.push('    ' + excNodeId + '[\u26A0 异常处理]');
+      edges.push('    ' + decNode.id + ' -->|\u274C 不通过| ' + excNodeId);
+      // Find the last node before end for "yes" branch
+      var lastEdge = edges.pop();
+      edges.push('    ' + decNode.id + ' -->|\u2705 通过| N' + (parseInt(decNode.id.substr(1)) + 1));
+      edges.push('    ' + excNodeId + ' --> N' + nodeId);
+      edges.push(lastEdge);
+    }
+  }
+
+  if (hasLoop) {
+    lines.push('    %% Loop back');
+  }
+
+  lines = lines.concat(nodeDefs);
+  lines = lines.concat(edges);
+
+  // Style
+  var styles = [];
+  for (var r = 0; r < nodes.length; r++) {
+    var snd = nodes[r];
+    switch(snd.type) {
+      case 'startend': styles.push('    style ' + snd.id + ' fill:#e6f1fb,stroke:#85b7eb'); break;
+      case 'process': styles.push('    style ' + snd.id + ' fill:#eeedfe,stroke:#afa9ec'); break;
+      case 'decision': styles.push('    style ' + snd.id + ' fill:#faeeda,stroke:#ef9f27'); break;
+      case 'output': styles.push('    style ' + snd.id + ' fill:#eaf3de,stroke:#97c459'); break;
+      case 'end': styles.push('    style ' + snd.id + ' fill:#eaf3de,stroke:#97c459'); break;
+    }
+  }
+  lines = lines.concat(styles);
+
+  return lines.join('\n');
+}
+
+// Mermaid live preview with debounce
+function wfLivePreview() {
+  if (_wfDebounceTimer) clearTimeout(_wfDebounceTimer);
+  _wfDebounceTimer = setTimeout(wfLiveRenderNow, 400);
+}
+
+function wfLiveRenderNow() {
+  var code = document.getElementById('wfLiveCode').value;
+  var preview = document.getElementById('wfLivePreviewWrap');
+  var hidden = document.getElementById('f_mainFlow');
+  if (hidden) hidden.value = code;
+  ssSet('f_mainFlow', code);
+
+  if (!code || !code.trim()) {
+    preview.innerHTML = '<div class="empty-state"><div class="empty-icon">\uD83D\uDCC8</div><p>流程图预览将在此显示</p></div>';
+    return;
+  }
+
+  var id = 'mermaid-' + Date.now();
+  preview.innerHTML = '<div class="mermaid" id="' + id + '">' + escapeHtml(code) + '</div>';
+  try {
+    mermaid.run({ querySelector: '#' + id });
+  } catch(e) {
+    preview.innerHTML = '<div style="color:#e24b4a;padding:20px;font-size:12px;">Mermaid 渲染错误: ' + escapeHtml(String(e)) + '</div>';
+  }
+}
+
+function wfLiveFormat() {
+  var code = document.getElementById('wfLiveCode').value;
+  // Basic formatting: indent
+  var lines = code.split('\n');
+  var formatted = '';
+  for (var i = 0; i < lines.length; i++) {
+    var line = lines[i].trim();
+    if (!line) { formatted += '\n'; continue; }
+    if (line.match(/^(graph|flowchart|sequenceDiagram|classDiagram|stateDiagram|erDiagram|gantt|pie|gitGraph)/i) || line.match(/^\w+\s*[\[\(\{]/)) {
+      formatted += line + '\n';
+    } else if (line.match(/^style\s/) || line.match(/^\w+\s*-+>\s*\w+/)) {
+      formatted += '    ' + line + '\n';
+    } else {
+      formatted += line + '\n';
+    }
+  }
+  document.getElementById('wfLiveCode').value = formatted.trim();
+  wfLiveRenderNow();
+}
+
+function wfGetCurrentCode() {
+  return document.getElementById('wfLiveCode').value;
+}
+
+function wfExportMmd() {
+  var code = wfGetCurrentCode();
+  if (!code) { wfToast('请先生成流程图'); return; }
+  wfDownloadFile('workflow.mmd', code, 'text/plain');
+}
+
+function wfExportSVG() {
+  var svgEl = document.querySelector('#wfLivePreviewWrap svg');
+  if (!svgEl) { wfToast('请先生成流程图'); return; }
+  var clone = svgEl.cloneNode(true);
+  var svgStr = new XMLSerializer().serializeToString(clone);
+  wfDownloadFile('workflow.svg', svgStr, 'image/svg+xml');
+}
+
+function wfExportPNG() {
+  var svgEl = document.querySelector('#wfLivePreviewWrap svg');
+  if (!svgEl) { wfToast('请先生成流程图'); return; }
+  var clone = svgEl.cloneNode(true);
+  var svgStr = new XMLSerializer().serializeToString(clone);
+  var canvas = document.createElement('canvas');
+  var ctx = canvas.getContext('2d');
+  var img = new Image();
+  var blob = new Blob([svgStr], {type:'image/svg+xml;charset=utf-8'});
+  var url = URL.createObjectURL(blob);
+  img.onload = function() {
+    canvas.width = img.width * 2;
+    canvas.height = img.height * 2;
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+    URL.revokeObjectURL(url);
+    canvas.toBlob(function(b) {
+      var a = document.createElement('a');
+      a.href = URL.createObjectURL(b);
+      a.download = 'workflow.png';
+      a.click();
+    });
+  };
+  img.src = url;
+}
+
+function wfCopyMermaid() {
+  var code = wfGetCurrentCode();
+  if (!code) { wfToast('请先生成流程图'); return; }
+  navigator.clipboard.writeText(code).then(function() {
+    wfToast('代码已复制到剪贴板');
+  }).catch(function() {
+    wfToast('复制失败，请手动复制');
+  });
+}
+
+function wfDownloadFile(name, content, mime) {
+  var blob = new Blob([content], { type: mime });
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = name;
+  a.click();
+}
+
+// ==============================
+// AUTOGEN FLOW (1-click)
+// ==============================
+function autoGenMainFlow() {
+  autoGenFlowPrompt();
+  genFlowFromPrompt();
+}
+
+// ==============================
+// STEP 3: Agent角色与提示词
+// ==============================
+function renderStep3() {
+  var html = '';
+  html += '<div style="max-width:860px;">';
+
+  html += '<div class="form-group">';
+  html += '<div class="form-label">System Prompt <span class="required">*</span></div>';
+  html += '<div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;">';
+  html += '<button class="btn btn-outline btn-sm" onclick="autoGenSystemPrompt()"><i class="fa-solid fa-wand-magic-sparkles"></i> 自动生成 System Prompt</button>';
+  html += '</div>';
+  html += '<textarea id="f_systemPrompt" rows="8" oninput="onFormChange()" placeholder="定义Agent的系统提示词..." style="font-family:Consolas,Monaco,monospace;font-size:12px;">' + escapeHtml(ssGet('f_systemPrompt')) + '</textarea>';
+  html += '</div>';
+
+  html += '<div class="form-row-inline">';
+  html += '<div class="form-group"><div class="form-label">Persona</div><input type="text" id="f_persona" value="' + escapeHtml(ssGet('f_persona')) + '" oninput="onFormChange()" placeholder="例：资深PLM分析专家"/></div>';
+  html += '<div class="form-group"><div class="form-label">Constraints</div><input type="text" id="f_constraints" value="' + escapeHtml(ssGet('f_constraints')) + '" oninput="onFormChange()" placeholder="约束条件"/></div>';
+  html += '</div>';
+
+  html += '<div class="form-row-inline">';
+  html += '<div class="form-group"><div class="form-label">Style</div><input type="text" id="f_style" value="' + escapeHtml(ssGet('f_style')) + '" oninput="onFormChange()" placeholder="例：专业、结构化"/></div>';
+  html += '<div class="form-group"><div class="form-label">Output Format</div><input type="text" id="f_outputFormat" value="' + escapeHtml(ssGet('f_outputFormat')) + '" oninput="onFormChange()" placeholder="例：JSON/Markdown"/></div>';
+  html += '</div>';
+
+  html += '</div>';
+  return html;
+}
+
+function autoGenSystemPrompt() {
+  var name = ssGet('f_name', 'AI Agent');
+  var role = ssGet('f_role', '工程师');
+  var pain = ssGet('f_pain', '待填写');
+  var output = ssGet('f_output', '报告');
+  var compliance = ssGet('f_compliance', '');
+
+  var prompt = '你是一个' + name + 'AI助手，专门为' + role + '提供智能支持。\n\n';
+  prompt += '## 背景\n';
+  prompt += '当前业务痛点: ' + pain + '\n\n';
+  prompt += '## 职责\n';
+  prompt += '1. 基于Windchill数据进行分析和推理\n';
+  prompt += '2. 生成结构化的' + output + '\n';
+  prompt += '3. 所有结论必须标注依据来源和置信度\n';
+  prompt += '4. 对不确定的结论主动提示用户复核\n\n';
+  prompt += '## 约束\n';
+  if (compliance) prompt += '- 严格遵循' + compliance + '标准\n';
+  prompt += '- 数据安全：不输出原始敏感数据\n';
+  prompt += '- 输出格式：Markdown结构化文档\n';
+  prompt += '- 当置信度低于75%时，明确标注风险等级\n\n';
+  prompt += '## 行为准则\n';
+  prompt += '- 专业、客观、准确\n';
+  prompt += '- 每步推理可追溯\n';
+  prompt += '- 主动识别数据缺失并提示\n';
+
+  ssSet('f_systemPrompt', prompt);
+  document.getElementById('f_systemPrompt').value = prompt;
+  wfToast('System Prompt 已生成');
+}
+
+// ==============================
+// STEP 4: Agent能力与推理
+// ==============================
+function renderStep4() {
+  var html = '';
+  html += '<div style="max-width:860px;">';
+
+  // Capability toggles
+  html += '<div class="form-group"><div class="form-label">Agent 能力配置</div>';
+  html += '<div class="capability-grid">';
+
+  var caps = [
+    { id: 'f_capRAG', icon: '\uD83D\uDD0D', name: 'RAG 检索增强', desc: '基于企业知识库的文档检索与问答' },
+    { id: 'f_capToolUse', icon: '\uD83D\uDEE0\uFE0F', name: 'Tool-Use 工具调用', desc: '调用Windchill API等外部工具' },
+    { id: 'f_capMultiTurn', icon: '\uD83D\uDD04', name: '多轮对话', desc: '支持上下文连续对话推理' },
+    { id: 'f_capMemory', icon: '\uD83E\uDDE0', name: '记忆能力', desc: '会话记忆与历史上下文保持' }
+  ];
+
+  for (var i = 0; i < caps.length; i++) {
+    var c = caps[i];
+    var checked = ssGet(c.id) === '1' ? ' checked' : '';
+    var enabledCls = ssGet(c.id) === '1' ? ' enabled' : '';
+    html += '<label class="capability-card' + enabledCls + '" id="cap-' + c.id + '" onclick="toggleCap(\'' + c.id + '\')">';
+    html += '<input type="checkbox" id="' + c.id + '" ' + checked + '>';
+    html += '<div class="cap-icon">' + c.icon + '</div>';
+    html += '<div class="cap-name">' + c.name + '</div>';
+    html += '<div class="cap-desc">' + c.desc + '</div>';
+    html += '</label>';
+  }
+  html += '</div></div>';
+
+  // RAG Config
+  html += '<div class="form-group" id="ragConfigGroup" style="display:none;">';
+  html += '<div class="form-label">RAG 配置</div>';
+  html += '<textarea id="f_ragConfig" rows="3" oninput="onFormChange()" placeholder="向量数据库、嵌入模型、检索策略等...">' + escapeHtml(ssGet('f_ragConfig')) + '</textarea>';
+  html += '</div>';
+
+  // Tool Schema
+  html += '<div class="form-group" id="toolSchemaGroup" style="display:none;">';
+  html += '<div class="form-label">Tool Schema</div>';
+  html += '<textarea id="f_toolSchemas" rows="4" oninput="onFormChange()" placeholder="定义工具调用的JSON Schema..." style="font-family:Consolas,Monaco,monospace;font-size:12px;">' + escapeHtml(ssGet('f_toolSchemas')) + '</textarea>';
+  html += '</div>';
+
+  // Agent Workflow
+  html += '<div class="form-group">';
+  html += '<div class="form-label">Agent Workflow</div>';
+  html += '<textarea id="f_agentWorkflow" rows="4" oninput="onFormChange()" placeholder="Agent工作流步骤说明...">' + escapeHtml(ssGet('f_agentWorkflow')) + '</textarea>';
+  html += '</div>';
+
+  // Reasoning Chain
+  html += '<div class="form-group">';
+  html += '<div class="form-label">Reasioning Chain 推理链</div>';
+  html += '<textarea id="f_reasoningChain" rows="4" oninput="onFormChange()" placeholder="推理链路：step1 -> step2 -> ...">' + escapeHtml(ssGet('f_reasoningChain')) + '</textarea>';
+  html += '</div>';
+
+  // Confidence thresholds
+  html += '<div class="form-group">';
+  html += '<div class="form-label">置信度阈值配置</div>';
+  html += '<div class="conf-slider-row">';
+  html += '<label>高置信自动</label>';
+  html += '<input type="range" id="f_confidenceHigh" min="60" max="100" value="' + (ssGet('f_confidenceHigh', '85')) + '" oninput="document.getElementById(\'confHighVal\').textContent=this.value+\'%\';onFormChange();">';
+  html += '<span class="conf-val" id="confHighVal">' + ssGet('f_confidenceHigh', '85') + '%</span>';
+  html += '</div>';
+  html += '<div class="conf-slider-row">';
+  html += '<label>中置信提示</label>';
+  html += '<input type="range" id="f_confidenceMid" min="40" max="85" value="' + (ssGet('f_confidenceMid', '70')) + '" oninput="document.getElementById(\'confMidVal\').textContent=this.value+\'%\';onFormChange();">';
+  html += '<span class="conf-val" id="confMidVal">' + ssGet('f_confidenceMid', '70') + '%</span>';
+  html += '</div>';
+  html += '</div>';
+
+  html += '</div>';
+  return html;
+}
+
+function toggleCap(id) {
+  var current = ssGet(id) === '1' ? '0' : '1';
+  ssSet(id, current);
+  updateCapUI();
+  onFormChange();
+}
+
+function updateCapUI() {
+  var caps = ['f_capRAG', 'f_capToolUse', 'f_capMultiTurn', 'f_capMemory'];
+  for (var i = 0; i < caps.length; i++) {
+    var id = caps[i];
+    var el = document.getElementById(id);
+    var label = document.getElementById('cap-' + id);
+    if (!el || !label) continue;
+    el.checked = (ssGet(id) === '1');
+    if (el.checked) {
+      label.classList.add('enabled');
+    } else {
+      label.classList.remove('enabled');
+    }
+  }
+  // Show/hide conditional groups
+  var ragGroup = document.getElementById('ragConfigGroup');
+  var toolGroup = document.getElementById('toolSchemaGroup');
+  if (ragGroup) ragGroup.style.display = (ssGet('f_capRAG') === '1') ? '' : 'none';
+  if (toolGroup) toolGroup.style.display = (ssGet('f_capToolUse') === '1') ? '' : 'none';
+}
+
+// ==============================
+// STEP 5: 护栏与容错
+// ==============================
+function renderStep5() {
+  var html = '';
+  html += '<div style="max-width:860px;">';
+
+  html += '<div class="form-group">';
+  html += '<div class="form-label">错误处理策略</div>';
+  html += '<textarea id="f_errorStrategy" rows="3" oninput="onFormChange()" placeholder="当Agent出现错误时的处理策略...">' + escapeHtml(ssGet('f_errorStrategy')) + '</textarea>';
+  html += '</div>';
+
+  html += '<div class="form-group">';
+  html += '<div class="form-label">兜底方案</div>';
+  html += '<textarea id="f_fallbackPlan" rows="3" oninput="onFormChange()" placeholder="当主要流程失败时的降级/兜底方案...">' + escapeHtml(ssGet('f_fallbackPlan')) + '</textarea>';
+  html += '</div>';
+
+  html += '<div class="form-group">';
+  html += '<div class="form-label">人工接手掌程</div>';
+  html += '<textarea id="f_humanHandoff" rows="3" oninput="onFormChange()" placeholder="定义何时以及如何转交人工处理...">' + escapeHtml(ssGet('f_humanHandoff')) + '</textarea>';
+  html += '</div>';
+
+  html += '<div class="form-group">';
+  html += '<div class="form-label">合规边界</div>';
+  html += '<textarea id="f_complianceBoundary" rows="3" oninput="onFormChange()" placeholder="Agent 不允许越过的合规红线...">' + escapeHtml(ssGet('f_complianceBoundary')) + '</textarea>';
+  html += '</div>';
+
+  html += '<div class="form-group">';
+  html += '<div class="form-label">记忆策略</div>';
+  html += '<textarea id="f_memoryStrategy" rows="3" oninput="onFormChange()" placeholder="会话记忆保留策略：短期/长期/上下文窗口...">' + escapeHtml(ssGet('f_memoryStrategy')) + '</textarea>';
+  html += '</div>';
+
+  html += '</div>';
+  return html;
+}
+
+// ==============================
+// STEP 6: 交互原型
+// ==============================
+function renderStep6() {
+  var html = '';
+  html += '<div class="proto-form-area">';
+
+  html += '<div class="form-group">';
+  html += '<div class="form-label">原型标题</div>';
+  html += '<input type="text" id="f_protoTitle" value="' + escapeHtml(ssGet('f_protoTitle', ssGet('f_name', 'AI 助手'))) + '" oninput="onFormChange()" placeholder="原型页面标题"/>';
+  html += '</div>';
+
+  html += '<div class="form-group">';
+  html += '<div class="form-label">原型描述</div>';
+  html += '<textarea id="f_protoDesc" rows="3" oninput="onFormChange()" placeholder="描述原型页面的主要功能和交互...">' + escapeHtml(ssGet('f_protoDesc')) + '</textarea>';
+  html += '</div>';
+
+  html += '<div class="form-group">';
+  html += '<div class="form-label">UI 流程说明</div>';
+  html += '<textarea id="f_uiFlow" rows="4" oninput="onFormChange()" placeholder="描述界面的交互流程：用户操作 → 界面响应 → 数据流转...">' + escapeHtml(ssGet('f_uiFlow')) + '</textarea>';
+  html += '</div>';
+
+  html += '<div style="padding: 16px;background:#fef8ef;border:0.5px solid var(--accent);border-radius:8px;margin-bottom:16px;">';
+  html += '<div style="font-weight:500;color:#854f0b;margin-bottom:8px;"><i class="fa-solid fa-lightbulb"></i> 生成交互原型</div>';
+  html += '<p style="font-size:12px;color:#666;margin-bottom:10px;">基于以上配置自动生成完整的交互原型HTML页面，包含界面布局、数据展示和交互逻辑。</p>';
+  html += '<button class="btn btn-accent" onclick="generatePrototype()"><i class="fa-solid fa-play"></i> 生成原型</button>';
+  html += '</div>';
+
+  html += '<div id="protoPreviewArea"></div>';
+
+  html += '</div>';
+  return html;
+}
+
+function restoreStep6() {
+  var el = document.getElementById('f_protoTitle');
+  if (el && !el.value) el.value = ssGet('f_name', '');
+}
+
+function generatePrototype() {
+  var name = ssGet('f_name', 'AI 助手');
+  var desc = ssGet('f_protoDesc', '智能分析工具');
+  var title = ssGet('f_protoTitle', name);
+
+  var html = '';
+  html += '<div style="margin-top:16px;border:0.5px solid var(--border);border-radius:8px;overflow:hidden;background:#fff;">';
+  html += '<div style="background:var(--accent);color:#fff;padding:12px 16px;display:flex;align-items:center;gap:10px;">';
+  html += '<i class="fa-solid fa-robot" style="font-size:18px;"></i>';
+  html += '<span style="font-weight:500;">' + escapeHtml(title) + ' - 原型预览</span>';
+  html += '</div>';
+  html += '<div style="padding:20px;">';
+
+  // Simple prototype mock
+  html += '<div style="background:#fafaf7;border:0.5px solid #ebebeb;border-radius:8px;padding:16px;margin-bottom:12px;">';
+  html += '<div style="font-size:12px;color:#888;margin-bottom:8px;">触发入口</div>';
+  html += '<div style="display:flex;gap:8px;align-items:center;">';
+  html += '<input type="text" style="flex:1;padding:8px 12px;border:0.5px solid var(--border);border-radius:6px;font-size:13px;" placeholder="输入分析条件..." />';
+  html += '<button class="btn btn-accent btn-sm">启动分析</button>';
+  html += '</div></div>';
+
+  html += '<div style="background:#fafaf7;border:0.5px solid #ebebeb;border-radius:8px;padding:16px;margin-bottom:12px;">';
+  html += '<div style="font-size:12px;color:#888;margin-bottom:8px;">分析结果</div>';
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px;">';
+  html += '<div style="text-align:center;padding:10px;border:0.5px solid #e24b4a;border-radius:6px;background:#fff;"><div style="font-size:18px;font-weight:600;">12</div><div style="font-size:10px;color:#888;">受影响项</div></div>';
+  html += '<div style="text-align:center;padding:10px;border:0.5px solid #ef9f27;border-radius:6px;background:#fff;"><div style="font-size:18px;font-weight:600;">中</div><div style="font-size:10px;color:#888;">风险等级</div></div>';
+  html += '<div style="text-align:center;padding:10px;border:0.5px solid #00B42A;border-radius:6px;background:#fff;"><div style="font-size:18px;font-weight:600;">91%</div><div style="font-size:10px;color:#888;">置信度</div></div>';
+  html += '</div>';
+  html += '<div style="border:0.5px solid #ebebeb;border-radius:6px;padding:10px;background:#fff;">';
+  html += '<div style="font-size:12px;color:#333;">AI 分析结论展示区域</div>';
+  html += '<div style="font-size:11px;color:#888;">基于 ' + escapeHtml(name) + ' 的智能分析结果将在此显示...</div>';
+  html += '</div></div>';
+
+  html += '<div style="display:flex;gap:8px;justify-content:flex-end;">';
+  html += '<button class="btn btn-sm btn-success"><i class="fa-solid fa-check"></i> 确认</button>';
+  html += '<button class="btn btn-sm btn-secondary"><i class="fa-solid fa-file-export"></i> 导出</button>';
+  html += '</div>';
+
+  html += '</div></div>';
+
+  document.getElementById('protoPreviewArea').innerHTML = html;
+  wfToast('原型已生成');
+}
+
+// ==============================
+// STEP 7: 交付物
+// ==============================
+function renderStep7() {
+  var html = '';
+  html += '<div style="max-width:860px;">';
+  html += '<div style="display:flex;gap:8px;margin-bottom:16px;">';
+  html += '<button class="btn btn-success" onclick="exportMarkdown()"><i class="fa-solid fa-file-lines"></i> 导出 Markdown</button>';
+  html += '<button class="btn btn-secondary" onclick="exportHTML()"><i class="fa-solid fa-file-code"></i> 导出 HTML 原型</button>';
+  html += '<button class="btn btn-outline" onclick="generateDeliverablePreview()"><i class="fa-solid fa-rotate"></i> 刷新预览</button>';
+  html += '</div>';
+  html += '<div id="deliverablePreviewContent" class="deliverable-preview">';
+  html += '<div class="empty-state"><div class="empty-icon">\uD83D\uDCE6</div><p>正在生成交付物预览...</p></div>';
+  html += '</div>';
+  html += '</div>';
+  return html;
+}
+
+function generateDeliverablePreview() {
+  var container = document.getElementById('deliverablePreviewContent');
+  if (!container) return;
+
+  var name = ssGet('f_name', '未命名场景');
+  var role = ssGet('f_role', '—');
+  var pain = ssGet('f_pain', '—');
+  var trigger = ssGet('f_trigger', '—');
+  var output = ssGet('f_output', '—');
+  var datasources = ssGetJSON('f_datasources', []);
+  var compliance = ssGet('f_compliance', '—');
+  var agentPosition = ssGet('f_agentPosition', '—');
+  var systemPrompt = ssGet('f_systemPrompt', '—');
+  var persona = ssGet('f_persona', '—');
+  var constraints = ssGet('f_constraints', '—');
+  var style = ssGet('f_style', '—');
+  var outputFormat = ssGet('f_outputFormat', '—');
+  var mainFlow = ssGet('f_mainFlow', '—');
+  var exceptionFlow = ssGet('f_exceptionFlow', '—');
+  var bizEvents = ssGet('f_bizEvents', '—');
+  var systems = ssGet('f_systems', '—');
+  var capRAG = ssGet('f_capRAG') === '1' ? '\u2705 RAG检索增强' : '\u274C RAG检索增强';
+  var capToolUse = ssGet('f_capToolUse') === '1' ? '\u2705 Tool-Use工具调用' : '\u274C Tool-Use工具调用';
+  var capMultiTurn = ssGet('f_capMultiTurn') === '1' ? '\u2705 多轮对话' : '\u274C 多轮对话';
+  var capMemory = ssGet('f_capMemory') === '1' ? '\u2705 记忆能力' : '\u274C 记忆能力';
+  var ragConfig = ssGet('f_ragConfig', '—');
+  var toolSchemas = ssGet('f_toolSchemas', '—');
+  var agentWorkflow = ssGet('f_agentWorkflow', '—');
+  var reasoningChain = ssGet('f_reasoningChain', '—');
+  var errorStrategy = ssGet('f_errorStrategy', '—');
+  var fallbackPlan = ssGet('f_fallbackPlan', '—');
+  var humanHandoff = ssGet('f_humanHandoff', '—');
+  var complianceBoundary = ssGet('f_complianceBoundary', '—');
+  var memoryStrategy = ssGet('f_memoryStrategy', '—');
+
+  // Datasource table
+  var dsRows = '';
+  for (var i = 0; i < datasources.length; i++) {
+    dsRows += '<tr><td>' + escapeHtml(datasources[i].name) + '</td><td>' + escapeHtml(datasources[i].format) + '</td></tr>';
+  }
+  if (!dsRows) dsRows = '<tr><td colspan="2">未配置</td></tr>';
+
+  // Mermaid flow
+  var flowMd = '```mermaid\n' + mainFlow + '\n```';
+
+  var html = '';
+  html += '<h1>' + escapeHtml(name) + '</h1>';
+  html += '<p><span class="tag tag-accent">' + escapeHtml(agentPosition) + '</span>';
+  if (compliance !== '—') html += ' <span class="tag tag-green">' + escapeHtml(compliance) + '</span>';
+  html += '</p>';
+
+  html += '<h2>1. 场景定义</h2>';
+  html += '<table>';
+  html += '<tr><th>维度</th><th>内容</th></tr>';
+  html += '<tr><td>场景名称</td><td>' + escapeHtml(name) + '</td></tr>';
+  html += '<tr><td>Agent定位</td><td>' + escapeHtml(agentPosition) + '</td></tr>';
+  html += '<tr><td>目标用户</td><td>' + escapeHtml(role) + '</td></tr>';
+  html += '<tr><td>业务痛点</td><td>' + escapeHtml(pain) + '</td></tr>';
+  html += '<tr><td>触发条件</td><td>' + escapeHtml(trigger) + '</td></tr>';
+  html += '<tr><td>期望输出</td><td>' + escapeHtml(output) + '</td></tr>';
+  html += '<tr><td>合规约束</td><td>' + escapeHtml(compliance) + '</td></tr>';
+  html += '</table>';
+
+  html += '<h3>核心数据源</h3>';
+  html += '<table><tr><th>数据源名称</th><th>格式</th></tr>' + dsRows + '</table>';
+
+  html += '<h2>2. 业务流程</h2>';
+  html += '<pre>' + flowMd + '</pre>';
+  if (exceptionFlow !== '—') html += '<h3>异常流程</h3><p>' + escapeHtml(exceptionFlow) + '</p>';
+  if (bizEvents !== '—') html += '<h3>关键业务事件</h3><p>' + escapeHtml(bizEvents) + '</p>';
+  if (systems !== '—') html += '<h3>涉及系统/模块</h3><p>' + escapeHtml(systems) + '</p>';
+
+  html += '<h2>3. Agent角色与提示词</h2>';
+  html += '<table>';
+  html += '<tr><th>维度</th><th>内容</th></tr>';
+  html += '<tr><td>Persona</td><td>' + escapeHtml(persona) + '</td></tr>';
+  html += '<tr><td>Constraints</td><td>' + escapeHtml(constraints) + '</td></tr>';
+  html += '<tr><td>Style</td><td>' + escapeHtml(style) + '</td></tr>';
+  html += '<tr><td>Output Format</td><td>' + escapeHtml(outputFormat) + '</td></tr>';
+  html += '</table>';
+  html += '<h3>System Prompt</h3>';
+  html += '<pre>' + escapeHtml(systemPrompt) + '</pre>';
+
+  html += '<h2>4. Agent能力与推理</h2>';
+  html += '<table>';
+  html += '<tr><th>能力</th><th>状态</th></tr>';
+  html += '<tr><td>RAG</td><td>' + capRAG + '</td></tr>';
+  html += '<tr><td>Tool-Use</td><td>' + capToolUse + '</td></tr>';
+  html += '<tr><td>多轮对话</td><td>' + capMultiTurn + '</td></tr>';
+  html += '<tr><td>记忆</td><td>' + capMemory + '</td></tr>';
+  html += '</table>';
+  if (ragConfig !== '—') html += '<h3>RAG配置</h3><pre>' + escapeHtml(ragConfig) + '</pre>';
+  if (toolSchemas !== '—') html += '<h3>Tool Schema</h3><pre>' + escapeHtml(toolSchemas) + '</pre>';
+  if (agentWorkflow !== '—') html += '<h3>Agent Workflow</h3><p>' + escapeHtml(agentWorkflow) + '</p>';
+  if (reasoningChain !== '—') html += '<h3>推理链</h3><p>' + escapeHtml(reasoningChain) + '</p>';
+
+  html += '<h2>5. 护栏与容错</h2>';
+  html += '<table>';
+  html += '<tr><th>维度</th><th>内容</th></tr>';
+  html += '<tr><td>错误策略</td><td>' + escapeHtml(errorStrategy) + '</td></tr>';
+  html += '<tr><td>兜底方案</td><td>' + escapeHtml(fallbackPlan) + '</td></tr>';
+  html += '<tr><td>人工接手</td><td>' + escapeHtml(humanHandoff) + '</td></tr>';
+  html += '<tr><td>合规边界</td><td>' + escapeHtml(complianceBoundary) + '</td></tr>';
+  html += '<tr><td>记忆策略</td><td>' + escapeHtml(memoryStrategy) + '</td></tr>';
+  html += '</table>';
+
+  html += '<p style="margin-top:20px;color:#888;font-size:11px;">本文档由 PLM AI 场景设计器自动生成</p>';
+
+  container.innerHTML = html;
+}
+
+// ==============================
+// FORM CHANGE HANDLER
+// ==============================
+function onFormChange() {
+  // Save all visible form fields to sessionStorage
+  saveAllFields();
+}
+
+function saveAllFields() {
+  // Step 1 fields
+  var f1 = ['f_name','f_role','f_pain','f_trigger','f_output','f_compliance','f_agentPosition','f_aiCapability'];
+  for (var i = 0; i < f1.length; i++) {
+    var el = document.getElementById(f1[i]);
+    if (el) ssSet(f1[i], el.value || '');
+  }
+  saveDataSources();
+
+  // Step 2 fields
+  var f2 = ['f_mainFlow','f_exceptionFlow','f_bizEvents','f_systems'];
+  for (var j = 0; j < f2.length; j++) {
+    var el2 = document.getElementById(f2[j]);
+    if (el2) ssSet(f2[j], el2.value || '');
+  }
+  // Also save flow from live editor
+  var wfCode = document.getElementById('wfLiveCode');
+  if (wfCode) ssSet('f_mainFlow', wfCode.value || '');
+  // 保存流程复杂度和步骤
+  var fcEl = document.getElementById('f_flowComplexity');
+  if (fcEl) ssSet('f_flowComplexity', fcEl.value || 'standard');
+  saveFlowSteps();
+
+  // Step 3 fields
+  var f3 = ['f_systemPrompt','f_persona','f_constraints','f_style','f_outputFormat'];
+  for (var k = 0; k < f3.length; k++) {
+    var el3 = document.getElementById(f3[k]);
+    if (el3) ssSet(f3[k], el3.value || '');
+  }
+
+  // Step 4 fields
+  var f4 = ['f_ragConfig','f_toolSchemas','f_agentWorkflow','f_reasoningChain'];
+  for (var l = 0; l < f4.length; l++) {
+    var el4 = document.getElementById(f4[l]);
+    if (el4) ssSet(f4[l], el4.value || '');
+  }
+  var elHigh = document.getElementById('f_confidenceHigh');
+  if (elHigh) ssSet('f_confidenceHigh', elHigh.value);
+  var elMid = document.getElementById('f_confidenceMid');
+  if (elMid) ssSet('f_confidenceMid', elMid.value);
+
+  // Step 5 fields
+  var f5 = ['f_errorStrategy','f_fallbackPlan','f_humanHandoff','f_complianceBoundary','f_memoryStrategy'];
+  for (var m = 0; m < f5.length; m++) {
+    var el5 = document.getElementById(f5[m]);
+    if (el5) ssSet(f5[m], el5.value || '');
+  }
+
+  // Step 6 fields
+  var f6 = ['f_protoTitle','f_protoDesc','f_uiFlow'];
+  for (var n = 0; n < f6.length; n++) {
+    var el6 = document.getElementById(f6[n]);
+    if (el6) ssSet(f6[n], el6.value || '');
+  }
+}
+
+// ==============================
+// NAVIGATION
+// ==============================
+function goToStep(n) {
+  saveAllFields();
+  setCurrentStep(n);
+  renderCurrentStep();
+  // Scroll to top
+  document.getElementById('stepBody').scrollTop = 0;
+}
+
+function nextStep() {
+  saveAllFields();
+  var step = getCurrentStep();
+  if (step >= 7) {
+    // Complete
+    wfToast('设计完成！请查看交付物预览');
+    return;
+  }
+  setCurrentStep(step + 1);
+  renderCurrentStep();
+  document.getElementById('stepBody').scrollTop = 0;
+}
+
+function prevStep() {
+  saveAllFields();
+  var step = getCurrentStep();
+  if (step <= 1) return;
+  setCurrentStep(step - 1);
+  renderCurrentStep();
+  document.getElementById('stepBody').scrollTop = 0;
+}
+
+// ==============================
+// EXPORT FUNCTIONS
+// ==============================
+function exportMarkdown() {
+  saveAllFields();
+  var name = ssGet('f_name', '未命名场景');
+  var role = ssGet('f_role', '—');
+  var pain = ssGet('f_pain', '—');
+  var trigger = ssGet('f_trigger', '—');
+  var output = ssGet('f_output', '—');
+  var datasources = ssGetJSON('f_datasources', []);
+  var compliance = ssGet('f_compliance', '—');
+  var agentPosition = ssGet('f_agentPosition', '—');
+  var aiCapability = ssGet('f_aiCapability', '—');
+  var systemPrompt = ssGet('f_systemPrompt', '—');
+  var persona = ssGet('f_persona', '—');
+  var constraints = ssGet('f_constraints', '—');
+  var systemStyle = ssGet('f_style', '—');
+  var outputFormat = ssGet('f_outputFormat', '—');
+  var mainFlow = ssGet('f_mainFlow', '');
+  var exceptionFlow = ssGet('f_exceptionFlow', '—');
+  var bizEvents = ssGet('f_bizEvents', '—');
+  var systems = ssGet('f_systems', '—');
+  var capRAG = ssGet('f_capRAG') === '1' ? '已启用' : '未启用';
+  var capToolUse = ssGet('f_capToolUse') === '1' ? '已启用' : '未启用';
+  var capMultiTurn = ssGet('f_capMultiTurn') === '1' ? '已启用' : '未启用';
+  var capMemory = ssGet('f_capMemory') === '1' ? '已启用' : '未启用';
+  var ragConfig = ssGet('f_ragConfig', '—');
+  var toolSchemas = ssGet('f_toolSchemas', '—');
+  var agentWorkflow = ssGet('f_agentWorkflow', '—');
+  var reasoningChain = ssGet('f_reasoningChain', '—');
+  var errorStrategy = ssGet('f_errorStrategy', '—');
+  var fallbackPlan = ssGet('f_fallbackPlan', '—');
+  var humanHandoff = ssGet('f_humanHandoff', '—');
+  var complianceBoundary = ssGet('f_complianceBoundary', '—');
+  var memoryStrategy = ssGet('f_memoryStrategy', '—');
+
+  var dsMd = '';
+  for (var i = 0; i < datasources.length; i++) {
+    dsMd += '| ' + datasources[i].name + ' | ' + datasources[i].format + ' |\n';
+  }
+  if (!dsMd) dsMd = '| — | — |\n';
+
+  var md = '# ' + name + '\n\n';
+  md += '> Agent定位：' + agentPosition + ' | 目标用户：' + role + '\n';
+  if (compliance !== '—') md += '> 合规约束：' + compliance + '\n';
+  md += '\n---\n\n';
+
+  md += '## 1. 场景定义\n\n';
+  md += '| 维度 | 内容 |\n|------|------|\n';
+  md += '| 场景名称 | ' + name + ' |\n';
+  md += '| Agent定位 | ' + agentPosition + ' |\n';
+  md += '| 目标用户角色 | ' + role + ' |\n';
+  md += '| 业务痛点 | ' + pain + ' |\n';
+  md += '| 触发条件 | ' + trigger + ' |\n';
+  md += '| 期望输出 | ' + output + ' |\n';
+  md += '| 合规约束 | ' + compliance + ' |\n';
+  md += '| AI能力 | ' + aiCapability + ' |\n\n';
+  md += '### 核心数据源\n\n| 名称 | 格式 |\n|------|------|\n' + dsMd + '\n';
+
+  md += '## 2. 业务流程\n\n';
+  var comp = ssGet('f_flowComplexity', 'standard');
+  md += '| 流程复杂度 | ' + comp + ' |\n\n';
+  // 导出流程步骤
+  var flowStepsExport = ssGetJSON('f_flowSteps', []);
+  if (flowStepsExport.length > 0) {
+    md += '### 流程步骤\n\n| 序号 | 步骤名称 | 类型 | 说明 |\n|------|---------|------|------|\n';
+    for (var fs = 0; fs < flowStepsExport.length; fs++) {
+      var fse = flowStepsExport[fs];
+      var fseType = fse.type;
+      for (var ft = 0; ft < FLOW_STEP_TYPES.length; ft++) {
+        if (FLOW_STEP_TYPES[ft].value === fse.type) { fseType = FLOW_STEP_TYPES[ft].label; break; }
+      }
+      md += '| ' + (fs + 1) + ' | ' + fse.name + ' | ' + fseType + ' | ' + (fse.desc || '—') + ' |\n';
+    }
+    md += '\n';
+  }
+  if (mainFlow) md += '```mermaid\n' + mainFlow + '\n```\n\n';
+  if (exceptionFlow !== '—') md += '### 异常流程\n' + exceptionFlow + '\n\n';
+  if (bizEvents !== '—') md += '### 关键业务事件\n' + bizEvents + '\n\n';
+  if (systems !== '—') md += '### 涉及系统/模块\n' + systems + '\n\n';
+
+  md += '## 3. Agent角色与提示词\n\n';
+  md += '| 维度 | 内容 |\n|------|------|\n';
+  md += '| Persona | ' + persona + ' |\n';
+  md += '| Constraints | ' + constraints + ' |\n';
+  md += '| Style | ' + systemStyle + ' |\n';
+  md += '| Output Format | ' + outputFormat + ' |\n\n';
+  md += '### System Prompt\n\n```\n' + systemPrompt + '\n```\n\n';
+
+  md += '## 4. Agent能力与推理\n\n';
+  md += '| 能力 | 状态 |\n|------|------|\n';
+  md += '| RAG 检索增强 | ' + capRAG + ' |\n';
+  md += '| Tool-Use 工具调用 | ' + capToolUse + ' |\n';
+  md += '| 多轮对话 | ' + capMultiTurn + ' |\n';
+  md += '| 记忆能力 | ' + capMemory + ' |\n\n';
+  if (ragConfig !== '—') md += '### RAG配置\n```\n' + ragConfig + '\n```\n\n';
+  if (toolSchemas !== '—') md += '### Tool Schema\n```json\n' + toolSchemas + '\n```\n\n';
+  if (agentWorkflow !== '—') md += '### Agent Workflow\n' + agentWorkflow + '\n\n';
+  if (reasoningChain !== '—') md += '### 推理链\n' + reasoningChain + '\n\n';
+
+  md += '## 5. 护栏与容错\n\n';
+  md += '| 维度 | 内容 |\n|------|------|\n';
+  md += '| 错误策略 | ' + errorStrategy + ' |\n';
+  md += '| 兜底方案 | ' + fallbackPlan + ' |\n';
+  md += '| 人工接手 | ' + humanHandoff + ' |\n';
+  md += '| 合规边界 | ' + complianceBoundary + ' |\n';
+  md += '| 记忆策略 | ' + memoryStrategy + ' |\n\n';
+
+  md += '---\n*本文档由 PLM AI 场景设计器自动生成*\n';
+
+  var blob = new Blob([md], { type: 'text/markdown;charset=utf-8' });
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'PLM_AI_' + name.replace(/\s+/g, '_').replace(/[\/\\:*?"<>|]/g, '') + '.md';
+  a.click();
+  wfToast('Markdown 已导出');
+}
+
+function exportHTML() {
+  saveAllFields();
+  var name = ssGet('f_name', 'AI场景');
+  var role = ssGet('f_role', '工程师');
+  var output = ssGet('f_output', '分析报告');
+  var compliance = ssGet('f_compliance', '');
+  var agentPosition = ssGet('f_agentPosition', '');
+  var pain = ssGet('f_pain', '');
+  var trigger = ssGet('f_trigger', '');
+
+  var ET = String.fromCharCode(60,47,115,99,114,105,112,116,62);
+
+  var html = '<!DOCTYPE html>\n<html lang="zh-CN">\n<head>\n<meta charset="UTF-8">\n';
+  html += '<meta name="viewport" content="width=device-width, initial-scale=1.0">\n';
+  html += '<title>' + name + ' - AI原型</title>\n';
+  html += '<script src="https://cdn.tailwindcss.com">' + ET + '\n';
+  html += '<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">\n';
+  html += '<style>\n';
+  html += 'body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background:#f5f7fa; }\n';
+  html += '.card { background:#fff; border-radius:8px; border:0.5px solid #e5e7eb; padding:16px; margin-bottom:12px; }\n';
+  html += '.btn { padding:8px 16px; border-radius:6px; font-size:13px; cursor:pointer; border:none; font-weight:500; }\n';
+  html += '.btn-primary { background:#e8a640; color:#fff; }\n';
+  html += '.btn-secondary { background:#fff; color:#444; border:0.5px solid #ddd; }\n';
+  html += '.tag { display:inline-block; padding:2px 8px; border-radius:10px; font-size:11px; margin:2px; }\n';
+  html += '.tag-accent { background:#fef8ef; color:#854f0b; }\n';
+  html += '.tag-green { background:#eaf3de; color:#3b6d11; }\n';
+  html += '<' + '/style>\n<' + '/head>\n<body>\n';
+  html += '<div style="max-width:800px;margin:0 auto;padding:24px;">\n';
+  html += '<div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">\n';
+  html += '<div style="width:32px;height:32px;background:#e8a640;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;">' + '\u2699' + '</div>\n';
+  html += '<div><h1 style="font-size:18px;font-weight:600;">' + name + '</h1>\n';
+  html += '<p style="font-size:12px;color:#888;">' + agentPosition + '</p></div>\n';
+  html += '</div>\n';
+
+  html += '<div class="card">\n';
+  html += '<h3 style="font-size:14px;margin-bottom:8px;">场景信息</h3>\n';
+  html += '<p><strong>目标用户：</strong>' + role + '</p>\n';
+  html += '<p><strong>业务痛点：</strong>' + pain + '</p>\n';
+  html += '<p><strong>触发条件：</strong>' + trigger + '</p>\n';
+  html += '<p><strong>期望输出：</strong>' + output + '</p>\n';
+  if (compliance) html += '<p><strong>合规约束：</strong>' + compliance + '</p>\n';
+  html += '</div>\n';
+
+  html += '<div class="card">\n';
+  html += '<h3 style="font-size:14px;margin-bottom:8px;">AI 分析面板</h3>\n';
+  html += '<div style="display:flex;gap:8px;margin-bottom:12px;">\n';
+  html += '<input type="text" style="flex:1;padding:8px 12px;border:0.5px solid #ddd;border-radius:6px;" placeholder="输入分析条件..." />\n';
+  html += '<button class="btn btn-primary" onclick="alert(\'AI分析中...\')">启动分析</button>\n';
+  html += '</div>\n';
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px;">\n';
+  html += '<div style="text-align:center;padding:10px;border:0.5px solid #e24b4a;border-radius:6px;"><div style="font-size:20px;font-weight:600;">12</div><div style="font-size:10px;color:#888;">受影响项</div></div>\n';
+  html += '<div style="text-align:center;padding:10px;border:0.5px solid #ef9f27;border-radius:6px;"><div style="font-size:20px;font-weight:600;">中</div><div style="font-size:10px;color:#888;">风险等级</div></div>\n';
+  html += '<div style="text-align:center;padding:10px;border:0.5px solid #00B42A;border-radius:6px;"><div style="font-size:20px;font-weight:600;">91%</div><div style="font-size:10px;color:#888;">置信度</div></div>\n';
+  html += '</div>\n';
+  html += '<div style="background:#f9fafb;border:0.5px solid #e5e7eb;border-radius:6px;padding:10px;">\n';
+  html += '<p style="font-size:12px;color:#666;">AI分析结论将在此显示...</p>\n';
+  html += '</div>\n</div>\n';
+
+  html += '<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px;">\n';
+  html += '<button class="btn btn-primary">确认</button>\n';
+  html += '<button class="btn btn-secondary">导出报告</button>\n';
+  html += '</div>\n';
+
+  html += '<p style="text-align:center;margin-top:24px;font-size:10px;color:#ccc;">由 PLM AI 场景设计器生成</p>\n';
+  html += '</div>\n<' + '/body>\n<' + '/html>';
+
+  var blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'PLM_AI_原型_' + name.replace(/\s+/g, '_').replace(/[\/\\:*?"<>|]/g, '') + '.html';
+  a.click();
+  wfToast('HTML 原型已导出');
+}
+
+// ==============================
+// UTILITIES
+// ==============================
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function wfToast(msg) {
+  var toast = document.getElementById('toast');
+  toast.textContent = msg;
+  toast.classList.add('show');
+  setTimeout(function() { toast.classList.remove('show'); }, 2000);
+}
+
+// ==============================
+// INITIALIZATION
+// ==============================
+document.addEventListener('DOMContentLoaded', function() {
+  // Ensure default datasources exist
+  var ds = ssGetJSON('f_datasources', []);
+  if (ds.length === 0) {
+    ssSet('f_datasources', JSON.stringify([{ name: '', format: DATASOURCE_FORMATS[0] }]));
+  }
+  // 方案B：确保默认流程复杂度
+  if (!ssGet('f_flowComplexity')) ssSet('f_flowComplexity', 'standard');
+  // 确保默认流程步骤存在
+  var steps = ssGetJSON('f_flowSteps', []);
+  if (steps.length === 0) {
+    ssSet('f_flowSteps', JSON.stringify([
+      { name: '触发接收', type: 'trigger', desc: '用户或系统事件触发' },
+      { name: '加载数据', type: 'data_load', desc: '从数据源读取相关数据' },
+      { name: 'AI分析', type: 'ai_analyze', desc: 'AI分析/识别/提取关键信息' },
+      { name: '结果输出', type: 'output', desc: '输出/生成报告' },
+      { name: '完成归档', type: 'end', desc: '结束并归档' }
+    ]));
+  }
+  renderCurrentStep();
+});
+
+// Keyboard navigation
+document.addEventListener('keydown', function(e) {
+  // Ctrl+Left / Ctrl+Right for navigation
+  if (e.ctrlKey && e.key === 'ArrowLeft') { e.preventDefault(); prevStep(); }
+  if (e.ctrlKey && e.key === 'ArrowRight') { e.preventDefault(); nextStep(); }
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,850 @@
+[
+  {
+    "slide": "ppt/slideMasters/slideMaster1.xml",
+    "texts": [
+      "add title",
+      "Add text",
+      "Second level",
+      "Third level",
+      "Fourth level",
+      "Fifth level",
+      "‹#›"
+    ]
+  },
+  {
+    "slide": "ppt/slideMasters/slideMaster2.xml",
+    "texts": [
+      "add title",
+      "Add text",
+      "Second level",
+      "Third level",
+      "Fourth level",
+      "Fifth level",
+      "‹#›"
+    ]
+  },
+  {
+    "slide": "ppt/slideLayouts/slideLayout1.xml",
+    "texts": [
+      "Presenter’s Name",
+      "Presenter’s Title",
+      "Add Date",
+      "PRESENTATION TITLE"
+    ]
+  },
+  {
+    "slide": "ppt/slideLayouts/slideLayout2.xml",
+    "texts": [
+      "Add text, image, table, or chart",
+      "Second level",
+      "Third level",
+      "Fourth level",
+      "Fifth level",
+      "add title"
+    ]
+  },
+  {
+    "slide": "ppt/slideLayouts/slideLayout3.xml",
+    "texts": [
+      "Presenter’s Name",
+      "Presenter’s Title",
+      "Add Date",
+      "PRESENTATION TITLE",
+      "DO NOT REPLACE IMAGE"
+    ]
+  },
+  {
+    "slide": "ppt/slideLayouts/slideLayout4.xml",
+    "texts": [
+      "Presenter’s Name",
+      "Presenter’s Title",
+      "Add Date",
+      "PRESENTATION TITLE",
+      "Click picture icon to add image"
+    ]
+  },
+  {
+    "slide": "ppt/slideLayouts/slideLayout5.xml",
+    "texts": [
+      "add title",
+      "Add text",
+      "Second level",
+      "Third level",
+      "Fourth level",
+      "Fifth level"
+    ]
+  },
+  {
+    "slide": "ppt/slideLayouts/slideLayout6.xml",
+    "texts": [
+      "add title"
+    ]
+  },
+  {
+    "slide": "ppt/slideLayouts/slideLayout7.xml",
+    "texts": [
+      "‹#›",
+      "ADD TITLE"
+    ]
+  },
+  {
+    "slide": "ppt/slideLayouts/slideLayout8.xml",
+    "texts": [
+      "‹#›"
+    ]
+  },
+  {
+    "slide": "ppt/slideLayouts/slideLayout9.xml",
+    "texts": [
+      "add title",
+      "‹#›"
+    ]
+  },
+  {
+    "slide": "ppt/slideLayouts/slideLayout10.xml",
+    "texts": [
+      "add title",
+      "‹#›"
+    ]
+  },
+  {
+    "slide": "ppt/slideLayouts/slideLayout11.xml",
+    "texts": [
+      "Add Title",
+      "Add Title",
+      "Click picture icon to add image",
+      "Click picture icon to add image",
+      "Add text",
+      "Add text",
+      "add title"
+    ]
+  },
+  {
+    "slide": "ppt/slideLayouts/slideLayout12.xml",
+    "texts": [
+      "add title",
+      "Click picture icon to add image",
+      "Add text",
+      "Add title",
+      "Click picture icon to add image",
+      "Add text",
+      "Add title",
+      "Click picture icon to add image",
+      "Add text",
+      "Add title"
+    ]
+  },
+  {
+    "slide": "ppt/slideLayouts/slideLayout13.xml",
+    "texts": [
+      "add title",
+      "Click picture icon to add image",
+      "Add text",
+      "Add title",
+      "Click picture icon to add image",
+      "Add text",
+      "Add title",
+      "Click picture icon to add image",
+      "Add text",
+      "Add title",
+      "Click picture icon to add image",
+      "Add text",
+      "Add title"
+    ]
+  },
+  {
+    "slide": "ppt/slideLayouts/slideLayout14.xml",
+    "texts": [
+      "add title",
+      "Add text",
+      "Add title",
+      "Add text",
+      "Add title",
+      "Add text",
+      "Add title",
+      "Add text",
+      "Add title",
+      "Click picture icon to add image",
+      "Click picture icon to add image",
+      "Click picture icon to add image",
+      "Click picture icon to add image",
+      "Click picture icon to add image",
+      "Add title",
+      "Add text"
+    ]
+  },
+  {
+    "slide": "ppt/slideLayouts/slideLayout15.xml",
+    "texts": [
+      "Click picture icon to add picture",
+      "‹#›",
+      "CLICK TO ADD TEXT"
+    ]
+  },
+  {
+    "slide": "ppt/slideLayouts/slideLayout16.xml",
+    "texts": [
+      "Click picture icon to add picture",
+      "‹#›",
+      "Add text",
+      "add TEXT"
+    ]
+  },
+  {
+    "slide": "ppt/slideLayouts/slideLayout17.xml",
+    "texts": [
+      "add title",
+      "Call out text",
+      "Subtitle title",
+      "Insert picture"
+    ]
+  },
+  {
+    "slide": "ppt/slideLayouts/slideLayout18.xml",
+    "texts": [
+      "Click picture icon to add image",
+      "add title",
+      "Add text",
+      "Second level",
+      "Third level",
+      "Fourth level"
+    ]
+  },
+  {
+    "slide": "ppt/slideLayouts/slideLayout19.xml",
+    "texts": [
+      "Add text",
+      "Second level",
+      "Third level",
+      "Fourth level",
+      "Fifth level",
+      "add title",
+      "Add text",
+      "Second level",
+      "Third level",
+      "Fourth level"
+    ]
+  },
+  {
+    "slide": "ppt/slideLayouts/slideLayout20.xml",
+    "texts": [
+      "Click picture icon to add image",
+      "add title",
+      "Add text",
+      "Second level",
+      "Third level",
+      "Fourth level",
+      "Fifth level"
+    ]
+  },
+  {
+    "slide": "ppt/slideLayouts/slideLayout21.xml",
+    "texts": [
+      "add title",
+      "Add text",
+      "Second level",
+      "Third level",
+      "Fourth level",
+      "Fifth level",
+      "Click picture icon to add image"
+    ]
+  },
+  {
+    "slide": "ppt/slideLayouts/slideLayout22.xml",
+    "texts": [
+      "add title",
+      "Add text",
+      "Second level",
+      "Third level",
+      "Fourth level",
+      "Fifth level",
+      "Add text",
+      "Second level",
+      "Third level",
+      "Fourth level",
+      "Fifth level"
+    ]
+  },
+  {
+    "slide": "ppt/slideLayouts/slideLayout23.xml",
+    "texts": [
+      "Click picture icon to add image",
+      "Case study title",
+      "Company description",
+      "Paste logo",
+      "Add text",
+      "Second level",
+      "Third level",
+      "Fourth level",
+      "Fifth level",
+      "‹#›"
+    ]
+  },
+  {
+    "slide": "ppt/slideLayouts/slideLayout24.xml",
+    "texts": [
+      "Click picture icon to add image",
+      "Case study title",
+      "‹#›",
+      "Quote",
+      "Author",
+      "Title",
+      "Company description",
+      "Paste logo",
+      "Add text",
+      "Second level",
+      "Third level",
+      "Fourth level",
+      "Fifth level",
+      "“"
+    ]
+  },
+  {
+    "slide": "ppt/slideLayouts/slideLayout25.xml",
+    "texts": [
+      "Click picture icon to add image",
+      "Case study title",
+      "‹#›",
+      "Add text",
+      "Second level",
+      "Add title",
+      "Quote",
+      "Author",
+      "Title",
+      "Add text",
+      "Second level",
+      "Add title",
+      "Company description",
+      "Paste logo"
+    ]
+  },
+  {
+    "slide": "ppt/slideLayouts/slideLayout26.xml",
+    "texts": [
+      "Add text",
+      "Second level",
+      "Third level",
+      "Fourth level",
+      "Fifth level",
+      "Add text",
+      "Second level",
+      "Third level",
+      "Fourth level",
+      "Fifth level",
+      "ADD TITLE"
+    ]
+  },
+  {
+    "slide": "ppt/slideLayouts/slideLayout27.xml",
+    "texts": [
+      "Add text",
+      "Second level",
+      "Third level",
+      "Fourth level",
+      "Fifth level",
+      "Add text",
+      "Second level",
+      "Third level",
+      "Fourth level",
+      "Fifth level",
+      "Add text",
+      "Second level",
+      "Third level",
+      "Fourth level",
+      "Fifth level",
+      "ADD TITLE"
+    ]
+  },
+  {
+    "slide": "ppt/slideLayouts/slideLayout28.xml",
+    "texts": [
+      "Divider – 1 line of text"
+    ]
+  },
+  {
+    "slide": "ppt/slideLayouts/slideLayout29.xml",
+    "texts": [
+      "Divider – 2 lines of text"
+    ]
+  },
+  {
+    "slide": "ppt/slideLayouts/slideLayout30.xml",
+    "texts": [
+      "Divider – 3 lines of text"
+    ]
+  },
+  {
+    "slide": "ppt/slideLayouts/slideLayout31.xml",
+    "texts": [
+      "Click picture icon to add image",
+      "add title",
+      "NAME",
+      "Title",
+      "Company Name /  logo"
+    ]
+  },
+  {
+    "slide": "ppt/slideLayouts/slideLayout32.xml",
+    "texts": [
+      "NAME",
+      "Company Name / logo",
+      "NAME",
+      "Title",
+      "Company Name / logo",
+      "Title",
+      "Click picture icon to add image",
+      "Click picture icon to add image",
+      "ADD TITLE"
+    ]
+  },
+  {
+    "slide": "ppt/slideLayouts/slideLayout33.xml",
+    "texts": [
+      "NAME",
+      "Company Name / logo",
+      "NAME",
+      "Title",
+      "Company Name / logo",
+      "Title",
+      "Click picture icon to add image",
+      "Click picture icon to add image",
+      "Click picture icon to add image",
+      "NAME",
+      "Title",
+      "Company Name / logo",
+      "ADD TITLE"
+    ]
+  },
+  {
+    "slide": "ppt/slideLayouts/slideLayout34.xml",
+    "texts": [
+      "add title",
+      "NAME",
+      "Title",
+      "Company Name /  logo",
+      "NAME",
+      "Title",
+      "Company Name /  logo",
+      "NAME",
+      "Title",
+      "Company Name /  logo",
+      "NAME",
+      "Title",
+      "Company Name /  logo",
+      "Click picture icon to add image",
+      "Click picture icon to add image",
+      "Click picture icon to add image",
+      "Click picture icon to add image"
+    ]
+  },
+  {
+    "slide": "ppt/slideLayouts/slideLayout35.xml",
+    "texts": [
+      "NAME",
+      "Title",
+      "Company Name /  logo",
+      "Click picture icon to add image",
+      "NAME",
+      "Title",
+      "Company Name /  logo",
+      "Click picture icon to add image",
+      "NAME",
+      "Title",
+      "Company Name /  logo",
+      "Click picture icon to add image",
+      "NAME",
+      "Title",
+      "Company Name /  logo",
+      "Click picture icon to add image",
+      "NAME",
+      "Title",
+      "Company Name /  logo",
+      "Click picture icon to add image",
+      "ADD TITLE"
+    ]
+  },
+  {
+    "slide": "ppt/slideLayouts/slideLayout36.xml",
+    "texts": [
+      "add title",
+      "Add title",
+      "Add a short paragraph – not too long – or a bulleted list",
+      "Add title",
+      "Add a short paragraph – not too long – or a bulleted list",
+      "Add title",
+      "Add a short paragraph – not too long – or a bulleted list",
+      "Paste icon from PTC PPT Library",
+      "Paste icon from PTC PPT Library",
+      "Paste icon from PTC PPT Library",
+      "Call out blurb"
+    ]
+  },
+  {
+    "slide": "ppt/slideLayouts/slideLayout37.xml",
+    "texts": [
+      "add title",
+      "Add title",
+      "Add a short paragraph – not too long – or a bulleted list",
+      "Add title",
+      "Add a short paragraph – not too long – or a bulleted list",
+      "Add title",
+      "Add a short paragraph – not too long – or a bulleted list",
+      "Add title",
+      "Add a short paragraph – not too long – or a bulleted list",
+      "Paste icon from PTC PPT Library",
+      "Paste icon from PTC PPT Library",
+      "Paste icon from PTC PPT Library",
+      "Paste icon from PTC PPT Library",
+      "Call out blurb"
+    ]
+  },
+  {
+    "slide": "ppt/slideLayouts/slideLayout38.xml",
+    "texts": [
+      "add title",
+      "Add title",
+      "Add a short paragraph – not too long – or a bulleted list",
+      "Add title",
+      "Add a short paragraph – not too long – or a bulleted list",
+      "Add title",
+      "Add a short paragraph – not too long – or a bulleted list",
+      "Add title",
+      "Add a short paragraph – not too long – or a bulleted list",
+      "Paste icon from PTC PPT Library",
+      "Paste icon from PTC PPT Library",
+      "Paste icon from PTC PPT Library",
+      "Paste icon from PTC PPT Library",
+      "Call out blurb",
+      "Paste icon from PTC PPT Library",
+      "Add title",
+      "Add a short paragraph – not too long – or a bulleted list"
+    ]
+  },
+  {
+    "slide": "ppt/slideLayouts/slideLayout39.xml",
+    "texts": [
+      "Click media icon to add video",
+      "add title"
+    ]
+  },
+  {
+    "slide": "ppt/slideLayouts/slideLayout40.xml",
+    "texts": [
+      "Click media icon to add video"
+    ]
+  },
+  {
+    "slide": "ppt/slideLayouts/slideLayout41.xml",
+    "texts": []
+  },
+  {
+    "slide": "ppt/slideLayouts/slideLayout42.xml",
+    "texts": [
+      "you",
+      "thank",
+      "ptc.com"
+    ]
+  },
+  {
+    "slide": "ppt/slideLayouts/slideLayout43.xml",
+    "texts": [
+      "separator",
+      "‹#›"
+    ]
+  },
+  {
+    "slide": "ppt/slideLayouts/slideLayout44.xml",
+    "texts": [
+      "‹#›",
+      "Quote",
+      "Author, Title, Company",
+      "Add title"
+    ]
+  },
+  {
+    "slide": "ppt/slideLayouts/slideLayout45.xml",
+    "texts": [
+      "add title",
+      "Add text",
+      "Second level",
+      "Third level",
+      "Fourth level",
+      "Fifth level",
+      "Add text",
+      "Second level",
+      "Third level",
+      "Fourth level",
+      "Fifth level"
+    ]
+  },
+  {
+    "slide": "ppt/slideLayouts/slideLayout46.xml",
+    "texts": [
+      "add title",
+      "Add text",
+      "Second level",
+      "Third level",
+      "Fourth level",
+      "Fifth level",
+      "Add text",
+      "Second level",
+      "Third level",
+      "Fourth level",
+      "Fifth level"
+    ]
+  },
+  {
+    "slide": "ppt/slideLayouts/slideLayout47.xml",
+    "texts": [
+      "Click picture icon to add image",
+      "Case study title",
+      "‹#›",
+      "Quote",
+      "Author",
+      "Title",
+      "Company description",
+      "Paste logo",
+      "Add text",
+      "Second level",
+      "Third level",
+      "Fourth level",
+      "Fifth level",
+      "“"
+    ]
+  },
+  {
+    "slide": "ppt/slideLayouts/slideLayout48.xml",
+    "texts": [
+      "Click picture icon to add image",
+      "Case study title",
+      "‹#›",
+      "Add text",
+      "Second level",
+      "Add title",
+      "Quote",
+      "Author",
+      "Title",
+      "Add text",
+      "Second level",
+      "Add title",
+      "Company description",
+      "Paste logo"
+    ]
+  },
+  {
+    "slide": "ppt/slideLayouts/slideLayout49.xml",
+    "texts": [
+      "Call out text",
+      "Add title (one line)",
+      "‹#›"
+    ]
+  },
+  {
+    "slide": "ppt/slideLayouts/slideLayout50.xml",
+    "texts": [
+      "Call out text",
+      "Add title (two lines)",
+      "‹#›"
+    ]
+  },
+  {
+    "slide": "ppt/slideLayouts/slideLayout51.xml",
+    "texts": [
+      "Add title (one line)",
+      "‹#›"
+    ]
+  },
+  {
+    "slide": "ppt/slideLayouts/slideLayout52.xml",
+    "texts": [
+      "Add title (one line)",
+      "‹#›"
+    ]
+  },
+  {
+    "slide": "ppt/slideLayouts/slideLayout53.xml",
+    "texts": [
+      "Add title (one line)",
+      "‹#›"
+    ]
+  },
+  {
+    "slide": "ppt/slideLayouts/slideLayout54.xml",
+    "texts": [
+      "Add title (two lines)",
+      "‹#›"
+    ]
+  },
+  {
+    "slide": "ppt/slideLayouts/slideLayout55.xml",
+    "texts": [
+      "‹#›",
+      "ADD CALL OUT TEXT"
+    ]
+  },
+  {
+    "slide": "ppt/slideLayouts/slideLayout56.xml",
+    "texts": [
+      "‹#›",
+      "ADD CALL OUT TEXT"
+    ]
+  },
+  {
+    "slide": "ppt/slides/slide1.xml",
+    "texts": [
+      "MBD",
+      "驱动的零件",
+      "APQP",
+      "质量落地总体业务过程及",
+      "AI",
+      "赋能点",
+      "创建零件概念模型",
+      "计划和确定项目",
+      "MBD",
+      "定义",
+      "产品设计和开发",
+      "过程设计和开发",
+      "产品和过程确认",
+      "反馈、评定和纠正措施",
+      "MBD",
+      "应用",
+      "创建零件",
+      "MBD",
+      "模型",
+      "PMI",
+      "标注",
+      "定义",
+      "特殊特性清单",
+      "（",
+      "BOC",
+      "）",
+      "1",
+      "创建",
+      "DFMEA",
+      "创建",
+      "PFMEA",
+      "2",
+      "PMI",
+      "标注图谱",
+      "特殊特性图谱",
+      "DFMEA",
+      "图谱",
+      "PFMEA",
+      "图谱",
+      "控制计划图谱",
+      "创建试产",
+      "/",
+      "量产控制计划",
+      "5",
+      "创建零件工艺路线",
+      "定义设备",
+      "/",
+      "工装",
+      "/",
+      "检具能力",
+      "4",
+      "质量异常闭环分析",
+      "3",
+      "输入",
+      ":",
+      "带有",
+      "PMI",
+      "标注的模型",
+      "特殊特性知识图谱（行业规范、企业规范）",
+      "输出",
+      ":",
+      "零件特殊特性清单（",
+      "BOC",
+      "）",
+      "输入",
+      ":",
+      "零件",
+      "MBD",
+      "模型，特殊特性清单、",
+      "DFMEA",
+      "、",
+      "PFMEA",
+      "、工艺",
+      "控制计划知识图谱",
+      "输出",
+      ":",
+      "-",
+      "零件控制计划",
+      "创建检验指导书",
+      "输入",
+      ":",
+      "零件",
+      "MBD",
+      "模型，特殊特性清单（",
+      "BOC",
+      "）、",
+      "DFMEA",
+      "、零件工艺",
+      "PFMEA",
+      "知识图谱",
+      "输出",
+      ":",
+      "-",
+      "零件",
+      "PFMEA",
+      "特性清单创建",
+      "Agent",
+      "PMI",
+      "标注",
+      "Agent",
+      "DFMEA",
+      "创建",
+      "Agent",
+      "输入",
+      ":",
+      "零部件模型",
+      "PMI",
+      "标注知识图谱（行业规范",
+      "-",
+      "企业规范）",
+      "输出",
+      ":",
+      "-",
+      "带有",
+      "PMI",
+      "标注的模型",
+      "输入",
+      ":",
+      "零件",
+      "MBD",
+      "模型，特殊特性清单（",
+      "BOC",
+      "）",
+      "DFMEA",
+      "知识图谱",
+      "输出",
+      ":",
+      "-",
+      "零件",
+      "DFMEA",
+      "1",
+      "2",
+      "3",
+      "控制计划创建",
+      "Agent",
+      "5",
+      "PFMEA",
+      "创建",
+      "Agent",
+      "4",
+      "输入",
+      ":",
+      "控制计划",
+      "检验指导书知识图谱",
+      "输出",
+      ":",
+      "-",
+      "零件检验指导书",
+      "检验指导书",
+      "Agent",
+      "6",
+      "6",
+      "质量检验图谱"
+    ]
+  }
+]
