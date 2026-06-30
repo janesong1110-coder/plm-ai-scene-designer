@@ -249,6 +249,13 @@ select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmln
 <script>
 mermaid.initialize({ startOnLoad: false, theme: 'neutral', securityLevel: 'strict', flowchart: { curve: 'basis', useMaxWidth: true } });
 
+// Form autosave debounce (300ms) to avoid per-keystroke writes
+var _formDebounceTimer = null;
+function debouncedSave() {
+  if (_formDebounceTimer) clearTimeout(_formDebounceTimer);
+  _formDebounceTimer = setTimeout(saveAllFields, 300);
+}
+
 // ==============================
 // CONSTANTS
 // ==============================
@@ -1849,63 +1856,38 @@ function generateDeliverablePreview() {
   var container = document.getElementById('deliverablePreviewContent');
   if (!container) return;
 
-  var name = ssGet('f_name', '未命名场景');
-  var role = ssGet('f_role', '—');
-  var pain = ssGet('f_pain', '—');
-  var trigger = ssGet('f_trigger', '—');
-  var output = ssGet('f_output', '—');
-  var datasources = ssGetJSON('f_datasources', []);
-  var compliance = ssGet('f_compliance', '—');
-  var agentPosition = ssGet('f_agentPosition', '—');
-  var systemPrompt = ssGet('f_systemPrompt', '—');
-  var persona = ssGet('f_persona', '—');
-  var constraints = ssGet('f_constraints', '—');
-  var style = ssGet('f_style', '—');
-  var outputFormat = ssGet('f_outputFormat', '—');
-  var mainFlow = ssGet('f_mainFlow', '—');
-  var exceptionFlow = ssGet('f_exceptionFlow', '—');
-  var bizEvents = ssGet('f_bizEvents', '—');
-  var systems = ssGet('f_systems', '—');
-  var capRAG = ssGet('f_capRAG') === '1' ? '\u2705 RAG检索增强' : '\u274C RAG检索增强';
-  var capToolUse = ssGet('f_capToolUse') === '1' ? '\u2705 Tool-Use工具调用' : '\u274C Tool-Use工具调用';
-  var capMultiTurn = ssGet('f_capMultiTurn') === '1' ? '\u2705 多轮对话' : '\u274C 多轮对话';
-  var capMemory = ssGet('f_capMemory') === '1' ? '\u2705 记忆能力' : '\u274C 记忆能力';
-  var ragConfig = ssGet('f_ragConfig', '—');
-  var toolSchemas = ssGet('f_toolSchemas', '—');
-  var agentWorkflow = ssGet('f_agentWorkflow', '—');
-  var reasoningChain = ssGet('f_reasoningChain', '—');
-  var errorStrategy = ssGet('f_errorStrategy', '—');
-  var fallbackPlan = ssGet('f_fallbackPlan', '—');
-  var humanHandoff = ssGet('f_humanHandoff', '—');
-  var complianceBoundary = ssGet('f_complianceBoundary', '—');
-  var memoryStrategy = ssGet('f_memoryStrategy', '—');
+  var f = getAllFieldValues();
+  var capRAG = f.capRAG ? '\u2705 RAG检索增强' : '\u274C RAG检索增强';
+  var capToolUse = f.capToolUse ? '\u2705 Tool-Use工具调用' : '\u274C Tool-Use工具调用';
+  var capMultiTurn = f.capMultiTurn ? '\u2705 多轮对话' : '\u274C 多轮对话';
+  var capMemory = f.capMemory ? '\u2705 记忆能力' : '\u274C 记忆能力';
 
   // Datasource table
   var dsRows = '';
-  for (var i = 0; i < datasources.length; i++) {
-    dsRows += '<tr><td>' + escapeHtml(datasources[i].name) + '</td><td>' + escapeHtml(datasources[i].format) + '</td></tr>';
+  for (var i = 0; i < f.datasources.length; i++) {
+    dsRows += '<tr><td>' + escapeHtml(f.datasources[i].name) + '</td><td>' + escapeHtml(f.datasources[i].format) + '</td></tr>';
   }
   if (!dsRows) dsRows = '<tr><td colspan="2">未配置</td></tr>';
 
   // Mermaid flow
-  var flowMd = '```mermaid\n' + mainFlow + '\n```';
+  var flowMd = '```mermaid\n' + f.mainFlow + '\n```';
 
   var html = '';
-  html += '<h1>' + escapeHtml(name) + '</h1>';
-  html += '<p><span class="tag tag-accent">' + escapeHtml(agentPosition) + '</span>';
-  if (compliance !== '—') html += ' <span class="tag tag-green">' + escapeHtml(compliance) + '</span>';
+  html += '<h1>' + escapeHtml(f.name) + '</h1>';
+  html += '<p><span class="tag tag-accent">' + escapeHtml(f.agentPosition) + '</span>';
+  if (f.compliance !== '—') html += ' <span class="tag tag-green">' + escapeHtml(f.compliance) + '</span>';
   html += '</p>';
 
   html += '<h2>1. 场景定义</h2>';
   html += '<table>';
   html += '<tr><th>维度</th><th>内容</th></tr>';
-  html += '<tr><td>场景名称</td><td>' + escapeHtml(name) + '</td></tr>';
-  html += '<tr><td>Agent定位</td><td>' + escapeHtml(agentPosition) + '</td></tr>';
-  html += '<tr><td>目标用户</td><td>' + escapeHtml(role) + '</td></tr>';
-  html += '<tr><td>业务痛点</td><td>' + escapeHtml(pain) + '</td></tr>';
-  html += '<tr><td>触发条件</td><td>' + escapeHtml(trigger) + '</td></tr>';
-  html += '<tr><td>期望输出</td><td>' + escapeHtml(output) + '</td></tr>';
-  html += '<tr><td>合规约束</td><td>' + escapeHtml(compliance) + '</td></tr>';
+  html += '<tr><td>场景名称</td><td>' + escapeHtml(f.name) + '</td></tr>';
+  html += '<tr><td>Agent定位</td><td>' + escapeHtml(f.agentPosition) + '</td></tr>';
+  html += '<tr><td>目标用户</td><td>' + escapeHtml(f.role) + '</td></tr>';
+  html += '<tr><td>业务痛点</td><td>' + escapeHtml(f.pain) + '</td></tr>';
+  html += '<tr><td>触发条件</td><td>' + escapeHtml(f.trigger) + '</td></tr>';
+  html += '<tr><td>期望输出</td><td>' + escapeHtml(f.output) + '</td></tr>';
+  html += '<tr><td>合规约束</td><td>' + escapeHtml(f.compliance) + '</td></tr>';
   html += '</table>';
 
   html += '<h3>核心数据源</h3>';
@@ -1913,20 +1895,20 @@ function generateDeliverablePreview() {
 
   html += '<h2>2. 业务流程</h2>';
   html += '<pre>' + flowMd + '</pre>';
-  if (exceptionFlow !== '—') html += '<h3>异常流程</h3><p>' + escapeHtml(exceptionFlow) + '</p>';
-  if (bizEvents !== '—') html += '<h3>关键业务事件</h3><p>' + escapeHtml(bizEvents) + '</p>';
-  if (systems !== '—') html += '<h3>涉及系统/模块</h3><p>' + escapeHtml(systems) + '</p>';
+  if (f.exceptionFlow !== '—') html += '<h3>异常流程</h3><p>' + escapeHtml(f.exceptionFlow) + '</p>';
+  if (f.bizEvents !== '—') html += '<h3>关键业务事件</h3><p>' + escapeHtml(f.bizEvents) + '</p>';
+  if (f.systems !== '—') html += '<h3>涉及系统/模块</h3><p>' + escapeHtml(f.systems) + '</p>';
 
   html += '<h2>3. Agent角色与提示词</h2>';
   html += '<table>';
   html += '<tr><th>维度</th><th>内容</th></tr>';
-  html += '<tr><td>Persona</td><td>' + escapeHtml(persona) + '</td></tr>';
-  html += '<tr><td>Constraints</td><td>' + escapeHtml(constraints) + '</td></tr>';
-  html += '<tr><td>Style</td><td>' + escapeHtml(style) + '</td></tr>';
-  html += '<tr><td>Output Format</td><td>' + escapeHtml(outputFormat) + '</td></tr>';
+  html += '<tr><td>Persona</td><td>' + escapeHtml(f.persona) + '</td></tr>';
+  html += '<tr><td>Constraints</td><td>' + escapeHtml(f.constraints) + '</td></tr>';
+  html += '<tr><td>Style</td><td>' + escapeHtml(f.systemStyle) + '</td></tr>';
+  html += '<tr><td>Output Format</td><td>' + escapeHtml(f.outputFormat) + '</td></tr>';
   html += '</table>';
   html += '<h3>System Prompt</h3>';
-  html += '<pre>' + escapeHtml(systemPrompt) + '</pre>';
+  html += '<pre>' + escapeHtml(f.systemPrompt) + '</pre>';
 
   html += '<h2>4. Agent能力与推理</h2>';
   html += '<table>';
@@ -1936,19 +1918,19 @@ function generateDeliverablePreview() {
   html += '<tr><td>多轮对话</td><td>' + capMultiTurn + '</td></tr>';
   html += '<tr><td>记忆</td><td>' + capMemory + '</td></tr>';
   html += '</table>';
-  if (ragConfig !== '—') html += '<h3>RAG配置</h3><pre>' + escapeHtml(ragConfig) + '</pre>';
-  if (toolSchemas !== '—') html += '<h3>Tool Schema</h3><pre>' + escapeHtml(toolSchemas) + '</pre>';
-  if (agentWorkflow !== '—') html += '<h3>Agent Workflow</h3><p>' + escapeHtml(agentWorkflow) + '</p>';
-  if (reasoningChain !== '—') html += '<h3>推理链</h3><p>' + escapeHtml(reasoningChain) + '</p>';
+  if (f.ragConfig !== '—') html += '<h3>RAG配置</h3><pre>' + escapeHtml(f.ragConfig) + '</pre>';
+  if (f.toolSchemas !== '—') html += '<h3>Tool Schema</h3><pre>' + escapeHtml(f.toolSchemas) + '</pre>';
+  if (f.agentWorkflow !== '—') html += '<h3>Agent Workflow</h3><p>' + escapeHtml(f.agentWorkflow) + '</p>';
+  if (f.reasoningChain !== '—') html += '<h3>推理链</h3><p>' + escapeHtml(f.reasoningChain) + '</p>';
 
   html += '<h2>5. 护栏与容错</h2>';
   html += '<table>';
   html += '<tr><th>维度</th><th>内容</th></tr>';
-  html += '<tr><td>错误策略</td><td>' + escapeHtml(errorStrategy) + '</td></tr>';
-  html += '<tr><td>兜底方案</td><td>' + escapeHtml(fallbackPlan) + '</td></tr>';
-  html += '<tr><td>人工接手</td><td>' + escapeHtml(humanHandoff) + '</td></tr>';
-  html += '<tr><td>合规边界</td><td>' + escapeHtml(complianceBoundary) + '</td></tr>';
-  html += '<tr><td>记忆策略</td><td>' + escapeHtml(memoryStrategy) + '</td></tr>';
+  html += '<tr><td>错误策略</td><td>' + escapeHtml(f.errorStrategy) + '</td></tr>';
+  html += '<tr><td>兜底方案</td><td>' + escapeHtml(f.fallbackPlan) + '</td></tr>';
+  html += '<tr><td>人工接手</td><td>' + escapeHtml(f.humanHandoff) + '</td></tr>';
+  html += '<tr><td>合规边界</td><td>' + escapeHtml(f.complianceBoundary) + '</td></tr>';
+  html += '<tr><td>记忆策略</td><td>' + escapeHtml(f.memoryStrategy) + '</td></tr>';
   html += '</table>';
 
   html += '<p style="margin-top:20px;color:#888;font-size:11px;">本文档由 PLM AI 场景设计器自动生成</p>';
@@ -1960,8 +1942,8 @@ function generateDeliverablePreview() {
 // FORM CHANGE HANDLER
 // ==============================
 function onFormChange() {
-  // Save all visible form fields to sessionStorage
-  saveAllFields();
+  // Debounced save — avoids per-keystroke full field scan
+  debouncedSave();
 }
 
 function saveAllFields() {
@@ -2034,8 +2016,30 @@ function goToStep(n) {
 function nextStep() {
   saveAllFields();
   var step = getCurrentStep();
+  
+  // Step 1 validation: required fields
+  if (step === 1) {
+    var name = ssGet('f_name', '').trim();
+    var role = ssGet('f_role', '').trim();
+    var pain = ssGet('f_pain', '').trim();
+    var datasources = ssGetJSON('f_datasources', []);
+    var hasDs = false;
+    for (var i = 0; i < datasources.length; i++) {
+      if (datasources[i].name && datasources[i].name.trim()) { hasDs = true; break; }
+    }
+    if (!name) { wfToast('请填写场景名称'); return; }
+    if (!role) { wfToast('请填写目标用户角色'); return; }
+    if (!pain) { wfToast('请填写业务痛点描述'); return; }
+    if (!hasDs) { wfToast('请至少添加一个数据源'); return; }
+  }
+  
+  // Step 2 validation: at least 2 flow steps
+  if (step === 2) {
+    var flowSteps = ssGetJSON('f_flowSteps', []);
+    if (flowSteps.length < 2) { wfToast('请至少定义2个流程步骤'); return; }
+  }
+  
   if (step >= 7) {
-    // Complete
     wfToast('设计完成！请查看交付物预览');
     return;
   }
@@ -2054,70 +2058,91 @@ function prevStep() {
 }
 
 // ==============================
+// SHARED FIELD ACCESSOR
+// ==============================
+// Single source of truth for reading all form fields from sessionStorage.
+// Used by deliverable preview, Markdown export, and HTML export.
+function getAllFieldValues() {
+  return {
+    name: ssGet('f_name', '未命名场景'),
+    role: ssGet('f_role', '—'),
+    pain: ssGet('f_pain', '—'),
+    trigger: ssGet('f_trigger', '—'),
+    output: ssGet('f_output', '—'),
+    datasources: ssGetJSON('f_datasources', []),
+    compliance: ssGet('f_compliance', '—'),
+    agentPosition: ssGet('f_agentPosition', '—'),
+    aiCapability: ssGet('f_aiCapability', '—'),
+    systemPrompt: ssGet('f_systemPrompt', '—'),
+    persona: ssGet('f_persona', '—'),
+    constraints: ssGet('f_constraints', '—'),
+    systemStyle: ssGet('f_style', '—'),
+    outputFormat: ssGet('f_outputFormat', '—'),
+    mainFlow: ssGet('f_mainFlow', ''),
+    exceptionFlow: ssGet('f_exceptionFlow', '—'),
+    bizEvents: ssGet('f_bizEvents', '—'),
+    systems: ssGet('f_systems', '—'),
+    capRAG: ssGet('f_capRAG') === '1',
+    capToolUse: ssGet('f_capToolUse') === '1',
+    capMultiTurn: ssGet('f_capMultiTurn') === '1',
+    capMemory: ssGet('f_capMemory') === '1',
+    ragConfig: ssGet('f_ragConfig', '—'),
+    toolSchemas: ssGet('f_toolSchemas', '—'),
+    agentWorkflow: ssGet('f_agentWorkflow', '—'),
+    reasoningChain: ssGet('f_reasoningChain', '—'),
+    errorStrategy: ssGet('f_errorStrategy', '—'),
+    fallbackPlan: ssGet('f_fallbackPlan', '—'),
+    humanHandoff: ssGet('f_humanHandoff', '—'),
+    complianceBoundary: ssGet('f_complianceBoundary', '—'),
+    memoryStrategy: ssGet('f_memoryStrategy', '—'),
+    confidenceHigh: ssGet('f_confidenceHigh', '85'),
+    confidenceMid: ssGet('f_confidenceMid', '70'),
+    flowComplexity: ssGet('f_flowComplexity', 'standard'),
+    flowSteps: ssGetJSON('f_flowSteps', []),
+    protoTitle: ssGet('f_protoTitle', ''),
+    protoDesc: ssGet('f_protoDesc', ''),
+    uiFlow: ssGet('f_uiFlow', '')
+  };
+}
+
+// ==============================
 // EXPORT FUNCTIONS
 // ==============================
 function exportMarkdown() {
   saveAllFields();
-  var name = ssGet('f_name', '未命名场景');
-  var role = ssGet('f_role', '—');
-  var pain = ssGet('f_pain', '—');
-  var trigger = ssGet('f_trigger', '—');
-  var output = ssGet('f_output', '—');
-  var datasources = ssGetJSON('f_datasources', []);
-  var compliance = ssGet('f_compliance', '—');
-  var agentPosition = ssGet('f_agentPosition', '—');
-  var aiCapability = ssGet('f_aiCapability', '—');
-  var systemPrompt = ssGet('f_systemPrompt', '—');
-  var persona = ssGet('f_persona', '—');
-  var constraints = ssGet('f_constraints', '—');
-  var systemStyle = ssGet('f_style', '—');
-  var outputFormat = ssGet('f_outputFormat', '—');
-  var mainFlow = ssGet('f_mainFlow', '');
-  var exceptionFlow = ssGet('f_exceptionFlow', '—');
-  var bizEvents = ssGet('f_bizEvents', '—');
-  var systems = ssGet('f_systems', '—');
-  var capRAG = ssGet('f_capRAG') === '1' ? '已启用' : '未启用';
-  var capToolUse = ssGet('f_capToolUse') === '1' ? '已启用' : '未启用';
-  var capMultiTurn = ssGet('f_capMultiTurn') === '1' ? '已启用' : '未启用';
-  var capMemory = ssGet('f_capMemory') === '1' ? '已启用' : '未启用';
-  var ragConfig = ssGet('f_ragConfig', '—');
-  var toolSchemas = ssGet('f_toolSchemas', '—');
-  var agentWorkflow = ssGet('f_agentWorkflow', '—');
-  var reasoningChain = ssGet('f_reasoningChain', '—');
-  var errorStrategy = ssGet('f_errorStrategy', '—');
-  var fallbackPlan = ssGet('f_fallbackPlan', '—');
-  var humanHandoff = ssGet('f_humanHandoff', '—');
-  var complianceBoundary = ssGet('f_complianceBoundary', '—');
-  var memoryStrategy = ssGet('f_memoryStrategy', '—');
+  var f = getAllFieldValues();
+  var capRAG = f.capRAG ? '已启用' : '未启用';
+  var capToolUse = f.capToolUse ? '已启用' : '未启用';
+  var capMultiTurn = f.capMultiTurn ? '已启用' : '未启用';
+  var capMemory = f.capMemory ? '已启用' : '未启用';
 
   var dsMd = '';
-  for (var i = 0; i < datasources.length; i++) {
-    dsMd += '| ' + datasources[i].name + ' | ' + datasources[i].format + ' |\n';
+  for (var i = 0; i < f.datasources.length; i++) {
+    dsMd += '| ' + f.datasources[i].name + ' | ' + f.datasources[i].format + ' |\n';
   }
   if (!dsMd) dsMd = '| — | — |\n';
 
-  var md = '# ' + name + '\n\n';
-  md += '> Agent定位：' + agentPosition + ' | 目标用户：' + role + '\n';
-  if (compliance !== '—') md += '> 合规约束：' + compliance + '\n';
+  var md = '# ' + f.name + '\n\n';
+  md += '> Agent定位：' + f.agentPosition + ' | 目标用户：' + f.role + '\n';
+  if (f.compliance !== '—') md += '> 合规约束：' + f.compliance + '\n';
   md += '\n---\n\n';
 
   md += '## 1. 场景定义\n\n';
   md += '| 维度 | 内容 |\n|------|------|\n';
-  md += '| 场景名称 | ' + name + ' |\n';
-  md += '| Agent定位 | ' + agentPosition + ' |\n';
-  md += '| 目标用户角色 | ' + role + ' |\n';
-  md += '| 业务痛点 | ' + pain + ' |\n';
-  md += '| 触发条件 | ' + trigger + ' |\n';
-  md += '| 期望输出 | ' + output + ' |\n';
-  md += '| 合规约束 | ' + compliance + ' |\n';
-  md += '| AI能力 | ' + aiCapability + ' |\n\n';
+  md += '| 场景名称 | ' + f.name + ' |\n';
+  md += '| Agent定位 | ' + f.agentPosition + ' |\n';
+  md += '| 目标用户角色 | ' + f.role + ' |\n';
+  md += '| 业务痛点 | ' + f.pain + ' |\n';
+  md += '| 触发条件 | ' + f.trigger + ' |\n';
+  md += '| 期望输出 | ' + f.output + ' |\n';
+  md += '| 合规约束 | ' + f.compliance + ' |\n';
+  md += '| AI能力 | ' + f.aiCapability + ' |\n\n';
   md += '### 核心数据源\n\n| 名称 | 格式 |\n|------|------|\n' + dsMd + '\n';
 
   md += '## 2. 业务流程\n\n';
-  var comp = ssGet('f_flowComplexity', 'standard');
-  md += '| 流程复杂度 | ' + comp + ' |\n\n';
+  md += '| 流程复杂度 | ' + f.flowComplexity + ' |\n\n';
   // 导出流程步骤
-  var flowStepsExport = ssGetJSON('f_flowSteps', []);
+  var flowStepsExport = f.flowSteps;
   if (flowStepsExport.length > 0) {
     md += '### 流程步骤\n\n| 序号 | 步骤名称 | 类型 | 说明 |\n|------|---------|------|------|\n';
     for (var fs = 0; fs < flowStepsExport.length; fs++) {
@@ -2130,18 +2155,18 @@ function exportMarkdown() {
     }
     md += '\n';
   }
-  if (mainFlow) md += '```mermaid\n' + mainFlow + '\n```\n\n';
-  if (exceptionFlow !== '—') md += '### 异常流程\n' + exceptionFlow + '\n\n';
-  if (bizEvents !== '—') md += '### 关键业务事件\n' + bizEvents + '\n\n';
-  if (systems !== '—') md += '### 涉及系统/模块\n' + systems + '\n\n';
+  if (f.mainFlow) md += '```mermaid\n' + f.mainFlow + '\n```\n\n';
+  if (f.exceptionFlow !== '—') md += '### 异常流程\n' + f.exceptionFlow + '\n\n';
+  if (f.bizEvents !== '—') md += '### 关键业务事件\n' + f.bizEvents + '\n\n';
+  if (f.systems !== '—') md += '### 涉及系统/模块\n' + f.systems + '\n\n';
 
   md += '## 3. Agent角色与提示词\n\n';
   md += '| 维度 | 内容 |\n|------|------|\n';
-  md += '| Persona | ' + persona + ' |\n';
-  md += '| Constraints | ' + constraints + ' |\n';
-  md += '| Style | ' + systemStyle + ' |\n';
-  md += '| Output Format | ' + outputFormat + ' |\n\n';
-  md += '### System Prompt\n\n```\n' + systemPrompt + '\n```\n\n';
+  md += '| Persona | ' + f.persona + ' |\n';
+  md += '| Constraints | ' + f.constraints + ' |\n';
+  md += '| Style | ' + f.systemStyle + ' |\n';
+  md += '| Output Format | ' + f.outputFormat + ' |\n\n';
+  md += '### System Prompt\n\n```\n' + f.systemPrompt + '\n```\n\n';
 
   md += '## 4. Agent能力与推理\n\n';
   md += '| 能力 | 状态 |\n|------|------|\n';
@@ -2149,44 +2174,38 @@ function exportMarkdown() {
   md += '| Tool-Use 工具调用 | ' + capToolUse + ' |\n';
   md += '| 多轮对话 | ' + capMultiTurn + ' |\n';
   md += '| 记忆能力 | ' + capMemory + ' |\n\n';
-  if (ragConfig !== '—') md += '### RAG配置\n```\n' + ragConfig + '\n```\n\n';
-  if (toolSchemas !== '—') md += '### Tool Schema\n```json\n' + toolSchemas + '\n```\n\n';
-  if (agentWorkflow !== '—') md += '### Agent Workflow\n' + agentWorkflow + '\n\n';
-  if (reasoningChain !== '—') md += '### 推理链\n' + reasoningChain + '\n\n';
+  if (f.ragConfig !== '—') md += '### RAG配置\n```\n' + f.ragConfig + '\n```\n\n';
+  if (f.toolSchemas !== '—') md += '### Tool Schema\n```json\n' + f.toolSchemas + '\n```\n\n';
+  if (f.agentWorkflow !== '—') md += '### Agent Workflow\n' + f.agentWorkflow + '\n\n';
+  if (f.reasoningChain !== '—') md += '### 推理链\n' + f.reasoningChain + '\n\n';
 
   md += '## 5. 护栏与容错\n\n';
   md += '| 维度 | 内容 |\n|------|------|\n';
-  md += '| 错误策略 | ' + errorStrategy + ' |\n';
-  md += '| 兜底方案 | ' + fallbackPlan + ' |\n';
-  md += '| 人工接手 | ' + humanHandoff + ' |\n';
-  md += '| 合规边界 | ' + complianceBoundary + ' |\n';
-  md += '| 记忆策略 | ' + memoryStrategy + ' |\n\n';
+  md += '| 错误策略 | ' + f.errorStrategy + ' |\n';
+  md += '| 兜底方案 | ' + f.fallbackPlan + ' |\n';
+  md += '| 人工接手 | ' + f.humanHandoff + ' |\n';
+  md += '| 合规边界 | ' + f.complianceBoundary + ' |\n';
+  md += '| 记忆策略 | ' + f.memoryStrategy + ' |\n\n';
 
   md += '---\n*本文档由 PLM AI 场景设计器自动生成*\n';
 
   var blob = new Blob([md], { type: 'text/markdown;charset=utf-8' });
   var a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = 'PLM_AI_' + name.replace(/\s+/g, '_').replace(/[\/\\:*?"<>|]/g, '') + '.md';
+  a.download = 'PLM_AI_' + f.name.replace(/\s+/g, '_').replace(/[\/\\:*?"<>|]/g, '') + '.md';
   a.click();
   wfToast('Markdown 已导出');
 }
 
 function exportHTML() {
   saveAllFields();
-  var name = ssGet('f_name', 'AI场景');
-  var role = ssGet('f_role', '工程师');
-  var output = ssGet('f_output', '分析报告');
-  var compliance = ssGet('f_compliance', '');
-  var agentPosition = ssGet('f_agentPosition', '');
-  var pain = ssGet('f_pain', '');
-  var trigger = ssGet('f_trigger', '');
+  var f = getAllFieldValues();
 
   var ET = String.fromCharCode(60,47,115,99,114,105,112,116,62);
 
   var html = '<!DOCTYPE html>\n<html lang="zh-CN">\n<head>\n<meta charset="UTF-8">\n';
   html += '<meta name="viewport" content="width=device-width, initial-scale=1.0">\n';
-  html += '<title>' + name + ' - AI原型</title>\n';
+  html += '<title>' + f.name + ' - AI原型</title>\n';
   html += '<script src="https://cdn.tailwindcss.com">' + ET + '\n';
   html += '<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">\n';
   html += '<style>\n';
@@ -2202,17 +2221,17 @@ function exportHTML() {
   html += '<div style="max-width:800px;margin:0 auto;padding:24px;">\n';
   html += '<div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">\n';
   html += '<div style="width:32px;height:32px;background:#e8a640;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;">' + '\u2699' + '</div>\n';
-  html += '<div><h1 style="font-size:18px;font-weight:600;">' + escapeHtml(name) + '</h1>\n';
-  html += '<p style="font-size:12px;color:#888;">' + escapeHtml(agentPosition) + '</p></div>\n';
+  html += '<div><h1 style="font-size:18px;font-weight:600;">' + escapeHtml(f.name) + '</h1>\n';
+  html += '<p style="font-size:12px;color:#888;">' + escapeHtml(f.agentPosition) + '</p></div>\n';
   html += '</div>\n';
 
   html += '<div class="card">\n';
   html += '<h3 style="font-size:14px;margin-bottom:8px;">场景信息</h3>\n';
-  html += '<p><strong>目标用户：</strong>' + escapeHtml(role) + '</p>\n';
-  html += '<p><strong>业务痛点：</strong>' + escapeHtml(pain) + '</p>\n';
-  html += '<p><strong>触发条件：</strong>' + escapeHtml(trigger) + '</p>\n';
-  html += '<p><strong>期望输出：</strong>' + escapeHtml(output) + '</p>\n';
-  if (compliance) html += '<p><strong>合规约束：</strong>' + escapeHtml(compliance) + '</p>\n';
+  html += '<p><strong>目标用户：</strong>' + escapeHtml(f.role) + '</p>\n';
+  html += '<p><strong>业务痛点：</strong>' + escapeHtml(f.pain) + '</p>\n';
+  html += '<p><strong>触发条件：</strong>' + escapeHtml(f.trigger) + '</p>\n';
+  html += '<p><strong>期望输出：</strong>' + escapeHtml(f.output) + '</p>\n';
+  if (f.compliance) html += '<p><strong>合规约束：</strong>' + escapeHtml(f.compliance) + '</p>\n';
   html += '</div>\n';
 
   html += '<div class="card">\n';
@@ -2241,7 +2260,7 @@ function exportHTML() {
   var blob = new Blob([html], { type: 'text/html;charset=utf-8' });
   var a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = 'PLM_AI_原型_' + name.replace(/\s+/g, '_').replace(/[\/\\:*?"<>|]/g, '') + '.html';
+  a.download = 'PLM_AI_原型_' + f.name.replace(/\s+/g, '_').replace(/[\/\\:*?"<>|]/g, '') + '.html';
   a.click();
   wfToast('HTML 原型已导出');
 }
