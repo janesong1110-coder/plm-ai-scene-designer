@@ -247,7 +247,7 @@ select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmln
 <div class="toast" id="toast"></div>
 
 <script>
-mermaid.initialize({ startOnLoad: false, theme: 'neutral', securityLevel: 'loose', flowchart: { curve: 'basis', useMaxWidth: true } });
+mermaid.initialize({ startOnLoad: false, theme: 'neutral', securityLevel: 'strict', flowchart: { curve: 'basis', useMaxWidth: true } });
 
 // ==============================
 // CONSTANTS
@@ -2202,17 +2202,17 @@ function exportHTML() {
   html += '<div style="max-width:800px;margin:0 auto;padding:24px;">\n';
   html += '<div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">\n';
   html += '<div style="width:32px;height:32px;background:#e8a640;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;">' + '\u2699' + '</div>\n';
-  html += '<div><h1 style="font-size:18px;font-weight:600;">' + name + '</h1>\n';
-  html += '<p style="font-size:12px;color:#888;">' + agentPosition + '</p></div>\n';
+  html += '<div><h1 style="font-size:18px;font-weight:600;">' + escapeHtml(name) + '</h1>\n';
+  html += '<p style="font-size:12px;color:#888;">' + escapeHtml(agentPosition) + '</p></div>\n';
   html += '</div>\n';
 
   html += '<div class="card">\n';
   html += '<h3 style="font-size:14px;margin-bottom:8px;">场景信息</h3>\n';
-  html += '<p><strong>目标用户：</strong>' + role + '</p>\n';
-  html += '<p><strong>业务痛点：</strong>' + pain + '</p>\n';
-  html += '<p><strong>触发条件：</strong>' + trigger + '</p>\n';
-  html += '<p><strong>期望输出：</strong>' + output + '</p>\n';
-  if (compliance) html += '<p><strong>合规约束：</strong>' + compliance + '</p>\n';
+  html += '<p><strong>目标用户：</strong>' + escapeHtml(role) + '</p>\n';
+  html += '<p><strong>业务痛点：</strong>' + escapeHtml(pain) + '</p>\n';
+  html += '<p><strong>触发条件：</strong>' + escapeHtml(trigger) + '</p>\n';
+  html += '<p><strong>期望输出：</strong>' + escapeHtml(output) + '</p>\n';
+  if (compliance) html += '<p><strong>合规约束：</strong>' + escapeHtml(compliance) + '</p>\n';
   html += '</div>\n';
 
   html += '<div class="card">\n';
@@ -2251,7 +2251,7 @@ function exportHTML() {
 // ==============================
 function escapeHtml(str) {
   if (!str) return '';
-  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 }
 
 function wfToast(msg) {

@@ -16,3 +16,9 @@ Thumbs.db
 # 临时文件
 *.tmp
 *.bak
+
+# 大型二进制文件
+*.pptx
+
+# Node.js (防御性)
+node_modules/
