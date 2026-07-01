@@ -10,8 +10,9 @@
 </script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <!-- bpmn-js BPMN 2.0 Modeler (loaded lazily when Step 2 is entered) -->
-<link rel="stylesheet" href="https://unpkg.com/bpmn-js@18.19.0/dist/assets/diagram-js.css">
-<link rel="stylesheet" href="https://unpkg.com/bpmn-js@18.19.0/dist/assets/bpmn-js.css">
+<!-- bpmn-js CSS: primary CDN with jsdelivr fallback -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bpmn-js@18.19.0/dist/assets/diagram-js.css" onerror="this.onerror=null;this.href='https://unpkg.com/bpmn-js@18.19.0/dist/assets/diagram-js.css'">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bpmn-js@18.19.0/dist/assets/bpmn-js.css" onerror="this.onerror=null;this.href='https://unpkg.com/bpmn-js@18.19.0/dist/assets/bpmn-js.css'">
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', sans-serif; font-size: 13px; color: #2c2c2a; background: #fcfcf9; min-height: 100vh; display: flex; flex-direction: column; }
@@ -93,8 +94,6 @@ select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmln
 .preset-btn:hover { background: #e6f1fb; border-color: #85b7eb; }
 .preset-btn .preset-icon { font-size: 16px; flex-shrink: 0; }
 .preset-btn .preset-name { font-weight: 500; display: block; }
-.preset-btn .preset-hint { color: #888780; font-size: 10px; }
-
 /* ── Dynamic Data Source List ── */
 .datasource-entry { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; padding: 8px; background: #fafaf7; border-radius: 6px; border: 0.5px solid #ebebeb; }
 .datasource-entry input { flex: 2; padding: 6px 10px; font-size: 12px; }
@@ -121,15 +120,6 @@ select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmln
 .fs-branch-row .btn-remove { flex-shrink: 0; width: 22px; height: 22px; border-radius: 50%; border: 0.5px solid #e24b4a; background: #fff; color: #e24b4a; cursor: pointer; font-size: 11px; }
 .fs-branch-row .btn-remove:hover { background: #fef2f2; }
 
-.flowstep-header { display: flex; gap: 6px; align-items: center; margin-bottom: 6px; padding: 0 8px; }
-.flowstep-header .fs-h-num { width: 24px; }
-.flowstep-header .fs-h-label { flex: 2; font-size: 11px; color: #888780; font-weight: 500; }
-.flowstep-header .fs-h-label-type { flex: 1; font-size: 11px; color: #888780; font-weight: 500; }
-.flowstep-header .fs-h-label-desc { flex: 3; font-size: 11px; color: #888780; font-weight: 500; }
-.flowstep-header .fs-h-label-role { width: 80px; font-size: 11px; color: #888780; font-weight: 500; }
-.flowstep-header .fs-h-label-parallel { width: 70px; font-size: 11px; color: #888780; font-weight: 500; }
-.flowstep-header .fs-h-gap { width: 28px; }
-
 /* Flow health bar */
 .flow-health-bar { margin-top: 12px; padding: 10px 14px; border-radius: 8px; font-size: 11px; display: flex; align-items: center; gap: 10px; }
 .flow-health-bar.healthy { background: #eaf3de; border: 0.5px solid #97c459; color: #3b6d11; }
@@ -148,8 +138,6 @@ select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmln
 /* ── Step 2 Workflow ── */
 .wf-section { margin-bottom: 20px; }
 .wf-section-title { font-size: 13px; font-weight: 500; color: var(--primary); margin-bottom: 10px; padding-bottom: 8px; border-bottom: 0.5px solid #ebebeb; display: flex; align-items: center; gap: 8px; }
-.wf-prompt-wrap { background: #fafaf7; border: 0.5px solid var(--border); border-radius: 8px; padding: 16px; }
-.wf-prompt-wrap textarea { background: #fff; border: 0.5px solid var(--border); font-family: 'Consolas', 'Monaco', monospace; font-size: 12px; line-height: 1.5; min-height: 120px; }
 .wf-editor-wrap { display: flex; gap: 0; border: 0.5px solid var(--border); border-radius: 8px; overflow: hidden; }
 .wf-code-pane { width: 50%; padding: 12px; background: #1e1e1e; }
 .wf-code-pane textarea { width: 100%; min-height: 300px; background: #1e1e1e; color: #d4d4d4; border: none; font-family: 'Consolas', 'Monaco', monospace; font-size: 12px; line-height: 1.6; resize: vertical; padding: 8px; }
@@ -228,6 +216,37 @@ select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmln
 
 /* ── Prototype Step ── */
 .proto-form-area { max-width: 700px; }
+
+/* ── v5.0: Error Boundary & Crash Recovery ── */
+.error-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(15,23,42,0.92); z-index: 99999; display: flex; align-items: center; justify-content: center; }
+.error-overlay-card { background: #fff; border-radius: 12px; padding: 32px; max-width: 520px; width: 90%; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+.error-overlay-card h2 { font-size: 16px; color: #e24b4a; margin-bottom: 8px; }
+.error-overlay-card .error-detail { font-size: 11px; color: #888; font-family: 'Consolas', monospace; background: #fafaf7; padding: 10px; border-radius: 6px; max-height: 120px; overflow-y: auto; margin: 12px 0; white-space: pre-wrap; word-break: break-all; }
+.error-actions { display: flex; gap: 8px; margin-top: 16px; flex-wrap: wrap; }
+
+/* ── v5.0: Acceptance Checklist ── */
+.acceptance-checklist { background: #fafaf7; border: 0.5px solid var(--border); border-radius: 8px; padding: 16px; margin-bottom: 16px; }
+.acceptance-checklist h3 { font-size: 13px; font-weight: 500; margin-bottom: 10px; }
+.accept-check-item { display: flex; align-items: center; gap: 10px; padding: 6px 0; font-size: 12px; border-bottom: 0.5px solid #ebebeb; }
+.accept-check-item:last-child { border-bottom: none; }
+.accept-check-item .ac-icon { font-size: 14px; }
+.accept-check-item .ac-icon.pass { color: #00B42A; }
+.accept-check-item .ac-icon.fail { color: #e24b4a; }
+.accept-check-item .ac-icon.pending { color: #d3d1c7; }
+
+/* ── v5.0: Version History Panel ── */
+.version-history-panel { background: #fafaf7; border: 0.5px solid var(--border); border-radius: 8px; max-height: 300px; overflow-y: auto; margin-bottom: 16px; }
+.version-entry { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-bottom: 0.5px solid #ebebeb; cursor: pointer; transition: background 0.12s; font-size: 12px; }
+.version-entry:hover { background: #eeedfe; }
+.version-entry:last-child { border-bottom: none; }
+.version-entry .v-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); flex-shrink: 0; }
+.version-entry.current .v-dot { background: #00B42A; }
+
+/* ── v5.0: Prompt Boundary Badge ── */
+.boundary-badge { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 500; margin: 4px; }
+.boundary-always { background: #eaf3de; color: #3b6d11; }
+.boundary-ask { background: #faeeda; color: #854f0b; }
+.boundary-never { background: #fcebeb; color: #a32d2d; }
 </style>
 </head>
 <body>
@@ -239,6 +258,9 @@ select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmln
     <div class="subtitle">基于 Windchill + 开源工具栈 · 7步向导式设计</div>
   </div>
   <div class="header-right">
+    <button class="btn btn-outline btn-sm" onclick="exportJSON()" title="导出完整场景JSON"><i class="fa-solid fa-download"></i> JSON</button>
+    <button class="btn btn-secondary btn-sm" onclick="document.getElementById('jsonFileInput').click()" title="导入场景JSON"><i class="fa-solid fa-upload"></i> 导入</button>
+    <input type="file" id="jsonFileInput" accept=".json" style="display:none;" onchange="importJSON(this)">
     <button class="btn btn-success" onclick="exportMarkdown()"><i class="fa-solid fa-file-lines"></i> 导出 Markdown</button>
     <button class="btn btn-secondary" onclick="exportHTML()"><i class="fa-solid fa-file-code"></i> 导出 HTML 原型</button>
   </div>
@@ -289,7 +311,7 @@ var STEPS = [
   { num: 7, icon: '\uD83D\uDCE6', title: '生成交付物', desc: '导出文档' }
 ];
 
-var DATASOURCE_FORMATS = ['windchill 数据对象', 'PDF', 'EXCEL文件', 'Word文件', 'Jason文件', '其他Agent输出'];
+var DATASOURCE_FORMATS = ['windchill 数据对象', 'Windchill EBOM/MBOM', 'Windchill 变更单(ECO)', 'Windchill 文档库', 'Windchill Ontology', 'ERP 数据', 'MES 数据', '知识图谱(RDF/OWL)', 'ODM/PLM API', 'PDF', 'EXCEL文件', 'Word文件', 'Jason文件', '其他Agent输出'];
 
 var FLOW_STEP_TYPES = [
   { value: 'trigger', label: '触发接收', icon: '\u26A1', shape: 'startend', color: '#e6f1fb' },
@@ -307,6 +329,20 @@ var FLOW_COMPLEXITY_OPTIONS = [
   { value: 'standard', label: '标准流程', desc: '5-7步，含1个判断点' },
   { value: 'complex', label: '复杂流程', desc: '8步以上，含多分支/多判断' }
 ];
+
+// v5.0: Max version snapshots
+var MAX_SNAPSHOTS = 50;
+
+// v5.0: Step metadata for help tooltips
+var STEP_HELP = {
+  1: { skill: 'interview-me, idea-refine, spec-driven', hint: '需求澄清三步法：假设浮现 → 置信评分 → 成功标准' },
+  2: { skill: 'idea-refine, spec-driven', hint: '预失败分析 + 流程边界约束（always/ask/never）' },
+  3: { skill: 'interview-me, spec-driven', hint: 'Persona 精炼 + 边界声明嵌入 Prompt' },
+  4: { skill: 'incremental, PLM domain', hint: '简单性检查 + PLM 本体推理 + BOM 比对' },
+  5: { skill: 'debugging, incremental', hint: '安全降级策略矩阵 + 可回滚性规划' },
+  6: { skill: 'frontend-ui', hint: '四态覆盖检查 + WCAG 2.1 AA 可访问性' },
+  7: { skill: 'git-workflow, spec-driven', hint: '版本历史面板 + 交付物验收清单' }
+};
 
 // BPMN 2.0 minimal default diagram (StartEvent only)
 var BPMN_DEFAULT_XML = '<?xml version="1.0" encoding="UTF-8"?>\n' +
@@ -437,10 +473,18 @@ var PRESETS = {
       {name:'归档追踪',type:'end',desc:'风险和整改记录跟踪归档'}
     ]
   }
+  // ── BOM AI Scenes ──
+  '物料归一化': { name:'物料归一化',pain:'多数据源物料数据不一致，属性/规格/编码混乱，缺乏统一物料主数据标准',trigger:'新物料导入或物料属性变更时',output:'归一化后的统一物料主数据+冲突解决报告+置信度评估',datasources:[{name:'Windchill EBOM',format:'Windchill EBOM/MBOM'},{name:'ERP 物料主数据',format:'ERP 数据'}],role:'物料标准化工程师',compliance:'IATF 16949',aiCapability:'自动识别异构物料属性映射关系，基于规则和AI模型统一物料编码和属性',flowComplexity:'standard',flowSteps:[{name:'物料数据拉取',type:'data_load',desc:'从多个系统拉取物料数据'},{name:'属性映射分析',type:'ai_analyze',desc:'AI识别异构属性对应关系'},{name:'归一化判定',type:'decision',desc:'是否需要人工审核',branches:[{label:'高置信→自动归一',targetStepIdx:4},{label:'低置信→人工审核',targetStepIdx:3}]},{name:'人工审核',type:'human_review',desc:'人工审核低置信映射关系',role_label:'物料工程师'},{name:'生成统一主数据',type:'output',desc:'输出归一化物料主数据+映射关系表'},{name:'归档',type:'end',desc:'物料归一化完成'}]},
+  '类型合并': { name:'类型合并',pain:'多类型BOM（EBOM/MBOM/PBOM）独立管理，合并对比效率低',trigger:'产品设计变更或工艺变更时',output:'多类型BOM差异报告+合并建议+变更影响分析',datasources:[{name:'Windchill EBOM',format:'Windchill EBOM/MBOM'},{name:'Windchill MBOM',format:'Windchill EBOM/MBOM'}],role:'BOM管理员',compliance:'IATF 16949',aiCapability:'智能比对多类型BOM结构差异，识别合并冲突，生成合并方案',flowComplexity:'complex',flowSteps:[{name:'加载BOM',type:'data_load',desc:'加载EBOM/MBOM/PBOM数据'},{name:'结构比对',type:'ai_analyze',desc:'AI比对结构差异和属性差异'},{name:'冲突检测',type:'decision',desc:'是否存在合并冲突',branches:[{label:'无冲突',targetStepIdx:4},{label:'有冲突',targetStepIdx:3}]},{name:'冲突解决',type:'human_review',desc:'人工处理合并冲突',role_label:'BOM工程师'},{name:'生成合并方案',type:'output',desc:'输出合并后的BOM+差异报告'},{name:'验证发布',type:'end',desc:'BOM合并完成并发布'}]},
+  '重复拦截': { name:'重复拦截',pain:'物料创建时缺乏有效的查重机制，大量重复/近重复物料存在于系统中',trigger:'新物料创建请求时',output:'重复检测报告+物料创建决策（允许/拒绝/待审核）',datasources:[{name:'Windchill 物料库',format:'Windchill EBOM/MBOM'},{name:'ERP 物料主数据',format:'ERP 数据'}],role:'物料标准化工程师',compliance:'IATF 16949',aiCapability:'基于语义相似度和属性匹配的智能物料查重，拦截重复/近重复创建',flowComplexity:'simple',flowSteps:[{name:'接收创建请求',type:'trigger',desc:'拦截新物料创建请求'},{name:'语义查重',type:'ai_analyze',desc:'AI语义匹配+属性相似度计算'},{name:'置信度判决',type:'decision',desc:'相似度判定',branches:[{label:'>90%→拦截',targetStepIdx:5},{label:'60-90%→提示',targetStepIdx:3},{label:'<60%→放行',targetStepIdx:4}]},{name:'人工复核',type:'human_review',desc:'人工审核中等相似度物料',role_label:'物料管理员'},{name:'放行创建',type:'output',desc:'准予创建新物料'},{name:'拦截返回',type:'end',desc:'拦截重复创建并推荐已有物料'}]},
+  'BOM生成': { name:'BOM生成',pain:'BOM创建依赖人工经验，效率低且容易遗漏',trigger:'新产品设计启动或设计变更时',output:'自动生成的BOM结构+版本号+校验报告',datasources:[{name:'Windchill 产品结构',format:'Windchill EBOM/MBOM'},{name:'需求规格文档',format:'PDF'}],role:'设计工程师',compliance:'IATF 16949',aiCapability:'基于需求文档和设计经验自动推导BOM结构，智能匹配物料和规格',flowComplexity:'complex',flowSteps:[{name:'解析需求',type:'data_load',desc:'从需求文档提取物料需求'},{name:'推导结构',type:'ai_analyze',desc:'AI自动推导BOM层级结构'},{name:'物料匹配',type:'data_load',desc:'从物料库匹配已有物料或创建新物料'},{name:'结构校验',type:'decision',desc:'BOM完整性校验',branches:[{label:'通过',targetStepIdx:5},{label:'需修正',targetStepIdx:4}]},{name:'人工修正',type:'human_review',desc:'人工修正BOM结构',role_label:'设计工程师'},{name:'发布BOM',type:'output',desc:'发布生成的BOM+校验报告'},{name:'归档',type:'end',desc:'BOM生成完成'}]},
+  '需求驱动生成': { name:'需求驱动生成',pain:'需求文档到BOM结构的转换缺乏自动化手段',trigger:'需求文档定稿后',output:'从需求自动推导的BOM结构+需求追溯矩阵',datasources:[{name:'需求规格文档',format:'PDF'},{name:'Windchill 产品模板',format:'Windchill EBOM/MBOM'}],role:'系统工程师',compliance:'ISO 15288',aiCapability:'从需求文档自动提取物料规格、数量、层级关系，生成初始BOM',flowComplexity:'complex',flowSteps:[{name:'解析需求文档',type:'data_load',desc:'NLP解析需求规格'},{name:'提取物料要素',type:'ai_analyze',desc:'AI提取物料、规格、数量、关系'},{name:'构建BOM树',type:'ai_analyze',desc:'构建初始BOM层级结构'},{name:'追溯验证',type:'decision',desc:'需求-物料追溯完整性',branches:[{label:'完整',targetStepIdx:5},{label:'有缺口',targetStepIdx:4}]},{name:'补充缺口',type:'human_review',desc:'人工补充需求缺口物料',role_label:'系统工程师'},{name:'输出追溯矩阵',type:'output',desc:'BOM+需求追溯矩阵'},{name:'归档',type:'end',desc:'需求驱动BOM生成完成'}]},
+  'BOM自检': { name:'BOM自检',pain:'BOM发布前人工检查耗时长，容易遗漏不一致',trigger:'BOM变更发布前',output:'BOM完整性/一致性检查报告+修复建议+合规检查结果',datasources:[{name:'Windchill EBOM',format:'Windchill EBOM/MBOM'},{name:'Windchill MBOM',format:'Windchill EBOM/MBOM'}],role:'BOM审核员',compliance:'IATF 16949',aiCapability:'自动检查BOM结构完整性、属性一致性、合规性，标记异常',flowComplexity:'standard',flowSteps:[{name:'加载BOM',type:'data_load',desc:'加载待检查的BOM'},{name:'规则执行',type:'ai_analyze',desc:'执行完整性/一致性/合规性规则'},{name:'异常标记',type:'decision',desc:'是否存在异常',branches:[{label:'无异常',targetStepIdx:4},{label:'有异常',targetStepIdx:3}]},{name:'异常分析',type:'ai_analyze',desc:'AI分析异常并提供修复建议'},{name:'生成报告',type:'output',desc:'输出检查报告+异常列表+修复建议'},{name:'归档',type:'end',desc:'BOM自检完成'}]},
+  '置信度分流': { name:'置信度分流',pain:'AI处理结果缺乏置信度评估，人工复审负担重',trigger:'AI处理存在不确定性时',output:'自动分流决策+低置信度路由到人工审核',datasources:[{name:'AI处理日志',format:'其他Agent输出'},{name:'人工审核记录',format:'其他Agent输出'}],role:'AI运维管理员',compliance:'IATF 16949',aiCapability:'基于置信度评分自动分流：高置信度自动处理、中置信度标注提示、低置信度路由人工',flowComplexity:'simple',flowSteps:[{name:'AI处理结果',type:'trigger',desc:'接收AI处理输出'},{name:'置信度评估',type:'ai_analyze',desc:'评估结果置信度等级'},{name:'分流决策',type:'decision',desc:'基于置信度路由',branches:[{label:'高→自动',targetStepIdx:5},{label:'中→标注',targetStepIdx:3},{label:'低→人工',targetStepIdx:4}]},{name:'置信标注',type:'output',desc:'标注置信度信息后输出'},{name:'人工处理',type:'human_review',desc:'人工审核低置信度结果',role_label:'领域专家'},{name:'结果汇总',type:'output',desc:'汇总所有处理结果'},{name:'归档',type:'end',desc:'分流处理完成'}]}
 };
 
-var PRESET_LIST = ['变更影响分析','BOM一致性校验','技术文档问答','仿真结果解读','需求追溯分析','合规风险预警'];
-var PRESET_ICONS = ['\uD83D\uDD0D','\u2705','\uD83D\uDCAC','\uD83D\uDCCA','\uD83D\uDD17','\u26A0\uFE0F'];
+var PRESET_LIST = ['变更影响分析','BOM一致性校验','技术文档问答','仿真结果解读','需求追溯分析','合规风险预警','\u2500\u2500 BOM AI 场景\u2500\u2500','物料归一化','类型合并','重复拦截','BOM生成','需求驱动生成','BOM自检','置信度分流'];
+var PRESET_ICONS = ['\uD83D\uDD0D','\u2705','\uD83D\uDCAC','\uD83D\uDCCA','\uD83D\uDD17','\u26A0\uFE0F','\u2500','\uD83D\uDD04','\uD83D\uDCE6','\uD83D\uDEAB','\uD83C\uDFD7\uFE0F','\uD83C\uDFAF','\u2705','\uD83D\uDD00'];
 
 // ==============================
 // SESSION STORAGE HELPERS
@@ -451,10 +495,26 @@ function ssGet(key, fallback) {
 }
 function ssSet(key, val) {
   try { sessionStorage.setItem(key, val); } catch(e) {}
+  // Mirror to localStorage for cross-session persistence
+  try {
+    var mirror = JSON.parse(localStorage.getItem('plm_scene_mirror') || '{}');
+    mirror[key] = val;
+    localStorage.setItem('plm_scene_mirror', JSON.stringify(mirror));
+  } catch(e) {}
 }
 function ssGetJSON(key, fallback) {
   try { var v = sessionStorage.getItem(key); return v ? JSON.parse(v) : (fallback !== undefined ? fallback : []); }
   catch(e) { return fallback !== undefined ? fallback : []; }
+}
+
+// Restore sessionStorage from localStorage mirror on init
+function restoreFromLocalStorage() {
+  try {
+    var mirror = JSON.parse(localStorage.getItem('plm_scene_mirror') || '{}');
+    var keys = Object.keys(mirror);
+    for (var i = 0; i < keys.length; i++) { sessionStorage.setItem(keys[i], mirror[keys[i]]); }
+    return keys.length;
+  } catch(e) { return 0; }
 }
 
 // ==============================
@@ -489,6 +549,10 @@ function renderStepNav() {
 // RENDER CURRENT STEP
 // ==============================
 function renderCurrentStep() {
+  try {
+  // Destroy BPMN modeler when navigating away from step 2
+  if (_bpmnModeler && getCurrentStep() !== 2) { destroyBpmnModeler(); }
+
   var step = getCurrentStep();
   renderStepNav();
   var body = document.getElementById('stepBody');
@@ -497,7 +561,7 @@ function renderCurrentStep() {
   var btnNext = document.getElementById('btnNext');
   var indicator = document.getElementById('stepIndicator');
 
-  indicator.textContent = '步骤 ' + step + ' / ' + STEPS.length;
+  indicator.textContent = '步骤 ' + step + ' / ' + STEPS.length + (STEP_HELP[step] ? ' · ' + STEP_HELP[step].skill : '');
 
   if (step <= 1) { btnPrev.style.display = 'none'; } else { btnPrev.style.display = ''; }
   if (step >= 7) { btnNext.textContent = '\u2713 完成设计'; }
@@ -519,7 +583,54 @@ function renderCurrentStep() {
   if (step === 4) updateCapUI();
   if (step === 6) restoreStep6();
   if (step === 7) generateDeliverablePreview();
+  } catch(e) {
+    showErrorOverlay(e, 'renderCurrentStep');
+  }
 }
+
+// ==============================
+// v5.0: GLOBAL ERROR BOUNDARY
+// ==============================
+function showErrorOverlay(err, context) {
+  var msg = (err && err.message) ? String(err.message) : '未知错误';
+  var stack = (err && err.stack) ? String(err.stack).substring(0, 500) : '无堆栈信息';
+  var overlay = document.createElement('div');
+  overlay.className = 'error-overlay';
+  overlay.id = 'errorOverlay';
+  overlay.innerHTML = '<div class="error-overlay-card">' +
+    '<h2><i class="fa-solid fa-triangle-exclamation"></i> 渲染异常</h2>' +
+    '<p style="font-size:12px;color:#444;">在 <strong>' + (context || '未知') + '</strong> 中发生错误</p>' +
+    '<div class="error-detail">' + escapeHtml(msg) + '</div>' +
+    '<details style="font-size:11px;color:#888;margin-top:8px;"><summary>堆栈追踪</summary>' +
+    '<div class="error-detail">' + escapeHtml(stack) + '</div></details>' +
+    '<div class="error-actions">' +
+    '<button class="btn btn-accent btn-sm" onclick="recoverFromError()"><i class="fa-solid fa-rotate"></i> 重试渲染</button>' +
+    '<button class="btn btn-outline btn-sm" onclick="exportJSON()"><i class="fa-solid fa-download"></i> 导出数据</button>' +
+    '<button class="btn btn-secondary btn-sm" onclick="resetAllData()"><i class="fa-solid fa-broom"></i> 重置数据</button>' +
+    '</div></div>';
+  document.body.appendChild(overlay);
+}
+
+function recoverFromError() {
+  var overlay = document.getElementById('errorOverlay');
+  if (overlay) overlay.remove();
+  try { renderCurrentStep(); } catch(e) { showErrorOverlay(e, 'recoverFromError'); }
+}
+
+function resetAllData() {
+  if (!confirm('此操作将清除所有场景设计数据，不可恢复！确定继续？')) return;
+  try { sessionStorage.clear(); localStorage.removeItem('plm_scene_mirror'); } catch(e) {}
+  var overlay = document.getElementById('errorOverlay');
+  if (overlay) overlay.remove();
+  location.reload();
+}
+
+// Global unhandled error catcher
+window.addEventListener('error', function(e) {
+  if (document.getElementById('errorOverlay')) return; // Already showing
+  showErrorOverlay(e.error || e, '全局异常');
+  e.preventDefault();
+});
 
 // ==============================
 // STEP 1: 场景定义
@@ -534,11 +645,50 @@ function renderStep1() {
   html += '<div class="preset-grid">';
   for (var i = 0; i < PRESET_LIST.length; i++) {
     var name = PRESET_LIST[i];
+    if (name.indexOf('\u2500\u2500') === 0) {
+      // Section divider for BOM AI scenes
+      html += '<div style="grid-column:1/-1;margin-top:8px;padding:6px 4px;font-size:11px;font-weight:600;color:var(--accent-dark);border-top:0.5px solid var(--border);">' + escapeHtml(name.replace(/\u2500/g,'')) + '</div>';
+      continue;
+    }
     html += '<button class="preset-btn" onclick="applyPreset(\'' + escapeHtml(name) + '\')">';
     html += '<span class="preset-icon">' + PRESET_ICONS[i] + '</span>';
     html += '<div><span class="preset-name">' + escapeHtml(name) + '</span></div>';
     html += '</button>';
   }
+  html += '</div></div>';
+
+  // ── Collapsible: Assumption & Confidence Panel (interview-me) ──
+  var assumptionExpanded = ssGet('_assumptionExpanded', '0') === '1';
+  html += '<div class="assumption-panel" style="margin-bottom:16px;border:0.5px solid var(--border);border-radius:8px;overflow:hidden;">';
+  html += '<div class="assumption-header" onclick="toggleAssumptionPanel()" style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:#fef8ef;cursor:pointer;font-size:13px;font-weight:500;color:var(--accent-dark);border-bottom:' + (assumptionExpanded ? '0.5px solid var(--border)' : 'none') + ';">';
+  html += '<span><i class="fa-solid fa-lightbulb" style="margin-right:6px;"></i>需求澄清检查（推荐完成）<span class="tag tag-accent" style="font-size:10px;margin-left:6px;">interview-me 方法论</span></span>';
+  html += '<span id="assumptionToggleIcon" style="font-size:10px;transition:transform 0.2s;">' + (assumptionExpanded ? '\u25B2' : '\u25BC') + '</span>';
+  html += '</div>';
+  html += '<div id="assumptionPanelBody" style="padding:' + (assumptionExpanded ? '14px' : '0 14px') + ';max-height:' + (assumptionExpanded ? '600px' : '0') + ';overflow:hidden;transition:all 0.25s;background:#fffdf8;">';
+  // Core hypothesis
+  html += '<div class="form-group" style="margin-bottom:12px;">';
+  html += '<div class="form-label" style="font-size:13px;">核心假设 <span style="color:var(--accent);font-size:11px;">（几句话陈述你认为用户真正想要什么）</span></div>';
+  html += '<textarea id="f_coreHypothesis" rows="2" oninput="onFormChange()" style="font-size:13px;resize:none;" placeholder="假设：用户想要...（一句话描述核心意图）">' + escapeHtml(ssGet('f_coreHypothesis')) + '</textarea>';
+  html += '</div>';
+  // Confidence score
+  var confScore = ssGet('f_confidenceScore', '50');
+  html += '<div class="form-group" style="margin-bottom:12px;">';
+  html += '<div class="form-label" style="font-size:13px;">置信度评估 <span style="font-weight:600;color:' + (parseInt(confScore) < 50 ? '#e24b4a' : parseInt(confScore) < 70 ? '#ef9f27' : '#00B42A') + ';" id="confScoreVal">' + confScore + '%</span></div>';
+  html += '<input type="range" id="f_confidenceScore" min="0" max="100" value="' + confScore + '" oninput="var v=this.value;document.getElementById(\'confScoreVal\').textContent=v+\'%\';document.getElementById(\'confScoreVal\').style.color=v<50?\'#e24b4a\':v<70?\'#ef9f27\':\'#00B42A\';onFormChange();" style="width:100%;accent-color:var(--accent);"/>';
+  html += '<div style="display:flex;justify-content:space-between;font-size:10px;color:#888;">';
+  html += '<span>0% 纯猜测</span><span>50% 大致确定</span><span>70% 比较确认</span><span>100% 完全确定</span></div>';
+  html += '</div>';
+  // Missing info list
+  var missingInfo = ssGetJSON('f_missingInfo', []);
+  html += '<div class="form-group">';
+  html += '<div class="form-label" style="font-size:13px;">待澄清信息</div>';
+  html += '<div id="missingInfoList" style="margin-bottom:6px;">';
+  for (var mi = 0; mi < missingInfo.length; mi++) {
+    html += '<div style="display:flex;gap:6px;margin-bottom:4px;"><input type="text" class="missingInfoItem" value="' + escapeHtml(missingInfo[mi]) + '" oninput="saveMissingInfo()" style="flex:1;" placeholder="需要澄清的问题..."/><button onclick="removeMissingInfoEntry(this)" style="background:none;border:none;color:#e24b4a;cursor:pointer;font-size:12px;padding:0 4px;">\u2715</button></div>';
+  }
+  html += '</div>';
+  html += '<button class="btn btn-outline btn-xs" onclick="addMissingInfo()"><i class="fa-solid fa-plus"></i> 添加待澄清项</button>';
+  html += '</div>';
   html += '</div></div>';
 
   // Agent定位概述
@@ -590,6 +740,32 @@ function renderStep1() {
   html += '<input type="text" id="f_compliance" value="' + escapeHtml(ssGet('f_compliance')) + '" oninput="onFormChange()" placeholder="例：IATF 16949、ISO 13485、AS9100"/>';
   html += '</div>';
 
+  // ── 新增：不做列表 (Scope Boundary - idea-refine + spec-driven) ──
+  html += '<div class="form-group">';
+  html += '<div class="form-label">明确不做的范围 (Scope Boundary) <span class="tag tag-blue" style="font-size:10px;margin-left:4px;">idea-refine</span></div>';
+  html += '<div class="form-hint">明确列出本场景不覆盖的能力和流程，防止范围蔓延</div>';
+  html += '<textarea id="f_notInScope" rows="3" oninput="onFormChange()" placeholder="例：不覆盖多语言翻译、不覆盖实时协同编辑、不覆盖移动端适配...">' + escapeHtml(ssGet('f_notInScope')) + '</textarea>';
+  html += '</div>';
+
+  // ── 新增：成功标准 (Success Criteria - spec-driven) ──
+  var successCriteria = ssGetJSON('f_successCriteria', []);
+  html += '<div class="form-group">';
+  html += '<div class="form-label">成功标准 (Success Criteria) <span class="tag tag-blue" style="font-size:10px;margin-left:4px;">spec-driven</span></div>';
+  html += '<div class="form-hint">可量化的成功条件，基于 spec-driven-development 方法论</div>';
+  html += '<div id="successCriteriaList">';
+  for (var sc = 0; sc < successCriteria.length; sc++) {
+    var scItem = successCriteria[sc];
+    html += '<div style="display:flex;gap:6px;margin-bottom:4px;align-items:center;">';
+    html += '<input type="text" class="scName" value="' + escapeHtml(scItem.name || '') + '" oninput="saveSuccessCriteria()" placeholder="指标名称" style="flex:2;"/>';
+    html += '<input type="text" class="scTarget" value="' + escapeHtml(scItem.target || '') + '" oninput="saveSuccessCriteria()" placeholder="目标值" style="flex:1;"/>';
+    html += '<input type="text" class="scMeasure" value="' + escapeHtml(scItem.measure || '') + '" oninput="saveSuccessCriteria()" placeholder="测量方式" style="flex:1.5;"/>';
+    html += '<button onclick="removeSuccessCriterion(this)" style="background:none;border:none;color:#e24b4a;cursor:pointer;font-size:12px;padding:0 4px;">\u2715</button>';
+    html += '</div>';
+  }
+  html += '</div>';
+  html += '<button class="btn btn-outline btn-xs" onclick="addSuccessCriterion()" style="margin-top:6px;"><i class="fa-solid fa-plus"></i> 添加成功标准</button>';
+  html += '</div>';
+
   // ── 新字段：AI能力 ──
   html += '<div class="form-group">';
   html += '<div class="form-label">AI能力</div>';
@@ -607,6 +783,77 @@ function setFlowComplexity(val) {
   var hidden = document.getElementById('f_flowComplexity');
   if (hidden) hidden.value = val;
   onFormChange();
+}
+
+// ── Step 1: Assumption Panel ──
+function toggleAssumptionPanel() {
+  var body = document.getElementById('assumptionPanelBody');
+  var icon = document.getElementById('assumptionToggleIcon');
+  var expanded = body.style.maxHeight !== '0px';
+  if (expanded) {
+    body.style.maxHeight = '0'; body.style.padding = '0 14px';
+    if (icon) icon.textContent = '\u25BC';
+    ssSet('_assumptionExpanded', '0');
+  } else {
+    body.style.maxHeight = '600px'; body.style.padding = '14px';
+    if (icon) icon.textContent = '\u25B2';
+    ssSet('_assumptionExpanded', '1');
+  }
+}
+
+function addMissingInfo() {
+  var list = document.getElementById('missingInfoList');
+  if (!list) return;
+  var div = document.createElement('div');
+  div.style.cssText = 'display:flex;gap:6px;margin-bottom:4px;';
+  div.innerHTML = '<input type="text" class="missingInfoItem" oninput="saveMissingInfo()" style="flex:1;" placeholder="需要澄清的问题..."/><button onclick="removeMissingInfoEntry(this)" style="background:none;border:none;color:#e24b4a;cursor:pointer;font-size:12px;padding:0 4px;">\u2715</button>';
+  list.appendChild(div);
+}
+
+function removeMissingInfoEntry(btn) {
+  var div = btn.parentNode;
+  if (div && div.parentNode) div.parentNode.removeChild(div);
+  saveMissingInfo();
+}
+
+function saveMissingInfo() {
+  var items = document.querySelectorAll('#missingInfoList .missingInfoItem');
+  var arr = [];
+  for (var i = 0; i < items.length; i++) {
+    var v = items[i].value.trim();
+    if (v) arr.push(v);
+  }
+  ssSet('f_missingInfo', JSON.stringify(arr));
+}
+
+// ── Step 1: Success Criteria ──
+function addSuccessCriterion() {
+  var list = document.getElementById('successCriteriaList');
+  if (!list) return;
+  var div = document.createElement('div');
+  div.style.cssText = 'display:flex;gap:6px;margin-bottom:4px;align-items:center;';
+  div.innerHTML = '<input type="text" class="scName" oninput="saveSuccessCriteria()" placeholder="指标名称" style="flex:2;"/><input type="text" class="scTarget" oninput="saveSuccessCriteria()" placeholder="目标值" style="flex:1;"/><input type="text" class="scMeasure" oninput="saveSuccessCriteria()" placeholder="测量方式" style="flex:1.5;"/><button onclick="removeSuccessCriterion(this)" style="background:none;border:none;color:#e24b4a;cursor:pointer;font-size:12px;padding:0 4px;">\u2715</button>';
+  list.appendChild(div);
+}
+
+function removeSuccessCriterion(btn) {
+  var div = btn.parentNode;
+  if (div && div.parentNode) div.parentNode.removeChild(div);
+  saveSuccessCriteria();
+}
+
+function saveSuccessCriteria() {
+  var names = document.querySelectorAll('#successCriteriaList .scName');
+  var targets = document.querySelectorAll('#successCriteriaList .scTarget');
+  var measures = document.querySelectorAll('#successCriteriaList .scMeasure');
+  var arr = [];
+  for (var i = 0; i < names.length; i++) {
+    var n = names[i].value.trim();
+    var t = targets[i] ? targets[i].value.trim() : '';
+    var m = measures[i] ? measures[i].value.trim() : '';
+    if (n) arr.push({ name: n, target: t, measure: m });
+  }
+  ssSet('f_successCriteria', JSON.stringify(arr));
 }
 
 // ── Flow Steps Management ──
@@ -933,6 +1180,13 @@ function renderStep2() {
   // ── 流程健康检查 ──
   html += '<div id="flowHealthBar" class="flow-health-bar" style="display:none;"></div>';
 
+  // ── 预失败分析 (Pre-mortem - idea-refine) ──
+  html += '<div class="wf-section" style="margin-top:16px;">';
+  html += '<div class="wf-section-title"><i class="fa-solid fa-skull" style="color:#e24b4a;"></i> <span>预失败分析 (Pre-mortem)</span><span class="tag tag-blue" style="font-size:10px;margin-left:6px;">idea-refine 方法论</span></div>';
+  html += '<div class="form-hint" style="margin-bottom:8px;font-size:12px;color:#888;">假设这个流程上线6个月后失败了，最可能的原因是什么？</div>';
+  html += '<textarea id="f_premortem" rows="3" oninput="onFormChange()" placeholder="1. 失败原因一：...&#10;2. 失败原因二：...&#10;3. 失败原因三：...">' + escapeHtml(ssGet('f_premortem')) + '</textarea>';
+  html += '</div>';
+
   // ── 业务上下文 ──
   html += '<div class="wf-section" style="margin-top:20px;">';
   html += '<div class="wf-section-title"><i class="fa-solid fa-puzzle-piece" style="color:var(--accent);"></i> <span>业务上下文</span></div>';
@@ -940,6 +1194,15 @@ function renderStep2() {
   html += '<div><div class="form-label">异常流程说明</div><textarea id="f_exceptionFlow" oninput="onFormChange()" placeholder="描述异常分支和错误处理...">' + escapeHtml(ssGet('f_exceptionFlow')) + '</textarea></div>';
   html += '<div><div class="form-label">关键业务事件</div><textarea id="f_bizEvents" oninput="onFormChange()" placeholder="列出关键业务事件节点...">' + escapeHtml(ssGet('f_bizEvents')) + '</textarea></div>';
   html += '<div><div class="form-label">涉及系统/模块</div><textarea id="f_systems" oninput="onFormChange()" placeholder="Windchill、ERP、MES...">' + escapeHtml(ssGet('f_systems')) + '</textarea></div>';
+  html += '</div></div>';
+
+  // ── 流程边界约束 (always/ask/never - spec-driven) ──
+  html += '<div class="wf-section" style="margin-top:16px;">';
+  html += '<div class="wf-section-title"><i class="fa-solid fa-circle-exclamation" style="color:var(--accent-dark);"></i> <span>流程边界约束</span><span class="tag tag-blue" style="font-size:10px;margin-left:6px;">spec-driven 方法论</span></div>';
+  html += '<div class="wf-context-grid">';
+  html += '<div><div class="form-label" style="color:#00B42A;">Always Do（始终执行）</div><textarea id="f_flowAlways" rows="3" oninput="onFormChange()" placeholder="- 每一步记录日志&#10;- 异常时保留原始数据&#10;- ...">' + escapeHtml(ssGet('f_flowAlways')) + '</textarea></div>';
+  html += '<div><div class="form-label" style="color:#ef9f27;">Ask First（需人工确认）</div><textarea id="f_flowAsk" rows="3" oninput="onFormChange()" placeholder="- 删除数据前确认&#10;- 跨系统操作前确认&#10;- ...">' + escapeHtml(ssGet('f_flowAsk')) + '</textarea></div>';
+  html += '<div><div class="form-label" style="color:#e24b4a;">Never Do（禁止操作）</div><textarea id="f_flowNever" rows="3" oninput="onFormChange()" placeholder="- 不修改原始BOM数据&#10;- 不跳过合规检查&#10;- ...">' + escapeHtml(ssGet('f_flowNever')) + '</textarea></div>';
   html += '</div></div>';
 
   html += '</div>';
@@ -999,22 +1262,70 @@ function switchFlowMode(mode) {
   if (tabM) tabM.className = 'mode-tab' + (mode === 'mermaid' ? ' active' : '');
 }
 
+function destroyBpmnModeler() {
+  if (_bpmnSaveTimer) { clearTimeout(_bpmnSaveTimer); _bpmnSaveTimer = null; }
+  if (_bpmnModeler) {
+    // Save before destroying
+    try { _bpmnModeler.saveXML({ format: true }).then(function(result) {
+      if (result && result.xml) ssSet('f_bpmnXml', result.xml);
+    }).catch(function(){}); } catch(e) {}
+    try { _bpmnModeler.destroy(); } catch(e) {}
+    _bpmnModeler = null;
+  }
+}
+
 function initBpmnModeler() {
   if (_bpmnModeler) {
     // Re-use existing instance if container still valid
     var canvas = document.getElementById('bpmnCanvas');
-    if (canvas && canvas.children.length > 0) return;
+    if (canvas && canvas.children.length > 0) {
+      // Container exists and has content — resize to fix any layout issues
+      try { _bpmnModeler.get('canvas').resized(); } catch(e) {}
+      return;
+    }
     // Container was recreated (navigation), destroy old instance
     try { _bpmnModeler.destroy(); } catch(e) {}
     _bpmnModeler = null;
   }
   var loadingDiv = document.getElementById('bpmnLoadingDiv');
   if (!loadingDiv) return;
-  if (_bpmnScriptLoaded) { createBpmnModeler(); return; }
+
+  // If script already loaded and BpmnJS global exists, create immediately
+  if (_bpmnScriptLoaded && typeof BpmnJS !== 'undefined') { createBpmnModeler(); return; }
+
+  // Primary CDN: jsdelivr (better connectivity in China)
+  _loadBpmnScript('https://cdn.jsdelivr.net/npm/bpmn-js@18.19.0/dist/bpmn-modeler.development.js', function() {
+    // Fallback: unpkg
+    _loadBpmnScript('https://unpkg.com/bpmn-js@18.19.0/dist/bpmn-modeler.development.js', function() {
+      loadingDiv.innerHTML = '<p style="color:#e24b4a;">\u26A0\uFE0F BPMN 编辑器脚本加载失败</p><p style="font-size:11px;color:#888780;margin-top:4px;">请检查网络连接后刷新页面，或切换到 Mermaid 代码编辑模式</p>';
+    }, true);
+  }, false);
+}
+
+function _loadBpmnScript(url, onFail, isFallback) {
+  var loadingDiv = document.getElementById('bpmnLoadingDiv');
   var script = document.createElement('script');
-  script.src = 'https://unpkg.com/bpmn-js@18.19.0/dist/bpmn-modeler.development.js';
-  script.onload = function() { _bpmnScriptLoaded = true; createBpmnModeler(); };
-  script.onerror = function() { loadingDiv.innerHTML = '<p style="color:#e24b4a;">\u26A0\uFE0F BPMN 编辑器加载失败，请检查网络连接后刷新页面</p>'; };
+  var loadTimer = setTimeout(function() {
+    script.onerror = null;
+    script.onload = null;
+    if (script.parentNode) script.parentNode.removeChild(script);
+    if (onFail) onFail();
+    if (loadingDiv) loadingDiv.innerHTML = '<p style="color:#e24b4a;">\u23F1\uFE0F BPMN 编辑器加载超时，请检查网络后刷新页面</p>';
+  }, 10000);
+  script.src = url;
+  script.onload = function() {
+    clearTimeout(loadTimer);
+    _bpmnScriptLoaded = true;
+    if (typeof BpmnJS !== 'undefined') {
+      createBpmnModeler();
+    } else if (onFail && !isFallback) {
+      onFail();
+    }
+  };
+  script.onerror = function() {
+    clearTimeout(loadTimer);
+    if (onFail) { onFail(); }
+  };
   document.head.appendChild(script);
 }
 
@@ -1023,6 +1334,12 @@ function createBpmnModeler() {
   var canvasWrap = document.getElementById('bpmnCanvasWrap');
   if (!canvasWrap) return;
   try {
+    // CRITICAL: Show container BEFORE creating BpmnJS so canvas has actual dimensions.
+    // Otherwise bpmn-js initializes with 0×0 and the editor renders invisible.
+    canvasWrap.style.display = '';
+    canvasWrap.style.minHeight = '550px';
+    loadingDiv.style.display = 'none';
+
     _bpmnModeler = new BpmnJS({ container: '#bpmnCanvas' });
     var xml = ssGet('f_bpmnXml', '');
     if (!xml) {
@@ -1031,17 +1348,21 @@ function createBpmnModeler() {
       else { xml = BPMN_DEFAULT_XML; }
     }
     _bpmnModeler.importXML(xml).then(function() {
-      loadingDiv.style.display = 'none';
-      canvasWrap.style.display = '';
+      // Force canvas to recalculate its viewport now that container is visible
+      _bpmnModeler.get('canvas').resized();
+
       _bpmnModeler.get('eventBus').on('commandStack.changed', function() {
         if (_bpmnSaveTimer) clearTimeout(_bpmnSaveTimer);
         _bpmnSaveTimer = setTimeout(function() { saveBpmnDiagram(); }, 500);
       });
     }).catch(function(err) {
-      loadingDiv.innerHTML = '<p style="color:#e24b4a;">\u26A0\uFE0F BPMN 图表加载失败: ' + escapeHtml(String(err.message || err)) + '</p>';
+      canvasWrap.style.display = 'none';
+      loadingDiv.style.display = 'flex';
+      loadingDiv.innerHTML = '<p style="color:#e24b4a;">\u26A0\uFE0F BPMN 图表加载失败: ' + escapeHtml(String(err.message || err)) + '</p><p style="font-size:11px;color:#888780;margin-top:4px;">尝试刷新页面或切换到 Mermaid 模式</p>';
     });
   } catch(e) {
-    loadingDiv.innerHTML = '<p style="color:#e24b4a;">\u26A0\uFE0F BPMN 编辑器初始化失败</p>';
+    loadingDiv.style.display = 'flex';
+    loadingDiv.innerHTML = '<p style="color:#e24b4a;">\u26A0\uFE0F BPMN 编辑器初始化失败: ' + escapeHtml(String(e.message || e)) + '</p><p style="font-size:11px;color:#888780;margin-top:4px;">可能是 BpmnJS 全局对象未加载，请检查网络后刷新</p>';
   }
 }
 
@@ -1327,9 +1648,6 @@ function autoGenFlowPrompt() {
 }
 
 
-// Legacy savePrompt — no longer used, prompt area removed
-function savePrompt() {}
-
 var _wfDebounceTimer = null;
 
 function genFlowFromSteps() {
@@ -1348,24 +1666,6 @@ function genFlowFromSteps() {
   wfLiveRenderNow();
   renderFlowHealth();
   wfToast('流程图已生成');
-}
-
-function toggleCodeEditor() {
-  var wrap = document.getElementById('wfEditorWrap');
-  var btn = document.getElementById('btnToggleEditor');
-  if (!wrap || !btn) return;
-  if (wrap.style.display === 'none') {
-    wrap.style.display = '';
-    btn.innerHTML = '<i class="fa-solid fa-code"></i> 收起编辑 ▴';
-  } else {
-    wrap.style.display = 'none';
-    btn.innerHTML = '<i class="fa-solid fa-code"></i> 高级编辑 ▾';
-  }
-}
-
-// Legacy: kept for backward compatibility with autoGenMainFlow
-function genFlowFromPrompt() {
-  genFlowFromSteps();
 }
 
 // 方案B：基于流程步骤精确生成 Mermaid
@@ -1637,176 +1937,6 @@ function renderFlowHealth() {
   container.style.display = '';
 }
 
-// Smart Template Engine
-function smartMermaidEngine(prompt) {
-  var lower = prompt.toLowerCase();
-  var nodes = [];
-  var nodeId = 0;
-
-  // Trigger / start
-  if (lower.indexOf('触发') !== -1 || lower.indexOf('接收') !== -1 || lower.indexOf('提交') !== -1) {
-    nodeId++; nodes.push({ id: 'N' + nodeId, type: 'startend', label: '触发/接收' });
-  } else {
-    nodeId++; nodes.push({ id: 'N' + nodeId, type: 'startend', label: '开始' });
-  }
-
-  // Data loading
-  var hasData = false;
-  var dsKeywords = ['数据源', '读取', '加载', 'windchill', 'pdf', '文件', '数据库'];
-  for (var i = 0; i < dsKeywords.length; i++) {
-    if (lower.indexOf(dsKeywords[i]) !== -1) { hasData = true; break; }
-  }
-  if (hasData) {
-    nodeId++; nodes.push({ id: 'N' + nodeId, type: 'process', label: '数据加载\\n读取关联数据源' });
-  }
-
-  // Analysis
-  var analysisKeywords = ['分析', '识别', '提取', '解析', '比对', '评估', '追溯', '解读', '推理'];
-  var hasAnalysis = false;
-  var analysisLabel = 'AI智能分析';
-  for (var j = 0; j < analysisKeywords.length; j++) {
-    if (lower.indexOf(analysisKeywords[j]) !== -1) {
-      hasAnalysis = true;
-      analysisLabel = analysisKeywords[j].charAt(0).toUpperCase() + analysisKeywords[j].slice(1) + '处理';
-      break;
-    }
-  }
-  if (hasAnalysis || hasData || nodeId >= 2) {
-    nodeId++; nodes.push({ id: 'N' + nodeId, type: 'process', label: analysisLabel });
-  }
-
-  // Decision
-  var decKeywords = ['判断', '是否', '审核', '审批', '校验', '检查', '合规', '验证', '确认'];
-  var hasDecision = false;
-  var decLabel = '结果校验';
-  for (var k = 0; k < decKeywords.length; k++) {
-    if (lower.indexOf(decKeywords[k]) !== -1) {
-      hasDecision = true;
-      decLabel = decKeywords[k].charAt(0).toUpperCase() + decKeywords[k].slice(1);
-      break;
-    }
-  }
-  if (hasDecision) {
-    nodeId++; nodes.push({ id: 'N' + nodeId, type: 'decision', label: decLabel + '?' });
-  }
-
-  // Manual intervention
-  if (lower.indexOf('人工') !== -1 || lower.indexOf('手动') !== -1) {
-    nodeId++; nodes.push({ id: 'N' + nodeId, type: 'manual', label: '人工介入' });
-  }
-
-  // Loop back
-  var hasLoop = false;
-  var loopKeywords = ['循环', '重新', '再次', '迭代', '重试'];
-  for (var l = 0; l < loopKeywords.length; l++) {
-    if (lower.indexOf(loopKeywords[l]) !== -1) { hasLoop = true; break; }
-  }
-
-  // Exception
-  var hasException = false;
-  var excKeywords = ['异常', '失败', '错误', '超时', '驳回'];
-  for (var m = 0; m < excKeywords.length; m++) {
-    if (lower.indexOf(excKeywords[m]) !== -1) { hasException = true; break; }
-  }
-
-  // Output
-  var outputKeywords = ['输出', '生成', '导出', '通知', '报告', '推送'];
-  var hasOutput = false;
-  for (var n = 0; n < outputKeywords.length; n++) {
-    if (lower.indexOf(outputKeywords[n]) !== -1) { hasOutput = true; break; }
-  }
-  if (hasOutput) {
-    nodeId++; nodes.push({ id: 'N' + nodeId, type: 'output', label: '输出结果\\n生成报告' });
-  }
-
-  // End
-  var endKeywords = ['结束', '完成', '归档'];
-  var endLabel = '完成';
-  for (var o = 0; o < endKeywords.length; o++) {
-    if (lower.indexOf(endKeywords[o]) !== -1) {
-      endLabel = endKeywords[o].charAt(0).toUpperCase() + endKeywords[o].slice(1);
-      break;
-    }
-  }
-  nodeId++; nodes.push({ id: 'N' + nodeId, type: 'end', label: endLabel });
-
-  // Assemble Mermaid
-  var lines = [];
-  lines.push('graph TD');
-  var nodeDefs = [];
-  var edges = [];
-  var prevId = null;
-
-  for (var p = 0; p < nodes.length; p++) {
-    var nd = nodes[p];
-    var id = nd.id;
-    var def = '';
-    switch(nd.type) {
-      case 'startend':
-        def = id + '([' + nd.label + '])'; break;
-      case 'process':
-        def = id + '[' + nd.label + ']'; break;
-      case 'decision':
-        def = id + '{' + nd.label + '}'; break;
-      case 'manual':
-        def = id + '[/' + nd.label + '/]'; break;
-      case 'output':
-        def = id + '[' + nd.label + ']'; break;
-      case 'end':
-        def = id + '([' + nd.label + '])'; break;
-      default:
-        def = id + '[' + nd.label + ']';
-    }
-    nodeDefs.push('    ' + def);
-
-    if (prevId !== null) {
-      edges.push('    ' + prevId + ' --> ' + id);
-    }
-    prevId = id;
-  }
-
-  // Handle decision branches
-  if (hasDecision) {
-    var decNode = null;
-    for (var q = 0; q < nodes.length; q++) {
-      if (nodes[q].type === 'decision') { decNode = nodes[q]; break; }
-    }
-    if (decNode && hasException) {
-      var excNodeId = 'EXC' + (nodeId + 1);
-      nodeDefs.push('    ' + excNodeId + '[\u26A0 异常处理]');
-      edges.push('    ' + decNode.id + ' -->|\u274C 不通过| ' + excNodeId);
-      // Find the last node before end for "yes" branch
-      var lastEdge = edges.pop();
-      edges.push('    ' + decNode.id + ' -->|\u2705 通过| N' + (parseInt(decNode.id.substr(1)) + 1));
-      edges.push('    ' + excNodeId + ' --> N' + nodeId);
-      edges.push(lastEdge);
-    }
-  }
-
-  if (hasLoop) {
-    lines.push('    %% Loop back');
-  }
-
-  lines = lines.concat(nodeDefs);
-  lines = lines.concat(edges);
-
-  // Style
-  var styles = [];
-  for (var r = 0; r < nodes.length; r++) {
-    var snd = nodes[r];
-    switch(snd.type) {
-      case 'startend': styles.push('    style ' + snd.id + ' fill:#e6f1fb,stroke:#85b7eb'); break;
-      case 'process': styles.push('    style ' + snd.id + ' fill:#eeedfe,stroke:#afa9ec'); break;
-      case 'decision': styles.push('    style ' + snd.id + ' fill:#faeeda,stroke:#ef9f27'); break;
-      case 'output': styles.push('    style ' + snd.id + ' fill:#eaf3de,stroke:#97c459'); break;
-      case 'end': styles.push('    style ' + snd.id + ' fill:#eaf3de,stroke:#97c459'); break;
-    }
-  }
-  lines = lines.concat(styles);
-
-  return lines.join('\n');
-}
-
 // Mermaid live preview with debounce
 function wfLivePreview() {
   if (_wfDebounceTimer) clearTimeout(_wfDebounceTimer);
@@ -1918,19 +2048,47 @@ function wfDownloadFile(name, content, mime) {
 }
 
 // ==============================
-// AUTOGEN FLOW (1-click)
-// ==============================
-function autoGenMainFlow() {
-  autoGenFlowPrompt();
-  genFlowFromPrompt();
-}
-
-// ==============================
 // STEP 3: Agent角色与提示词
 // ==============================
 function renderStep3() {
   var html = '';
   html += '<div style="max-width:860px;">';
+
+  // ── Persona Refinement Panel (interview-me) ──
+  var curPersona = ssGet('f_personaPref', '');
+  html += '<div class="form-group" id="personaExtractionPanel">';
+  html += '<div class="form-label"><i class="fa-solid fa-theater-masks"></i> Persona 精炼 <span class="tag tag-blue" style="font-size:10px;margin-left:4px;">interview-me 方法论</span></div>';
+  html += '<div style="display:flex;gap:8px;">';
+  var personas = [
+    { id: 'expert', icon: '\uD83E\uDDE0', name: '领域专家型', hint: '深度PLM知识、严谨分析' },
+    { id: 'guide', icon: '\uD83E\uDDED', name: '向导型', hint: '引导用户完成流程、友好交互' },
+    { id: 'guard', icon: '\uD83D\uDEE1\uFE0F', name: '守护型', hint: '合规检查优先、安全第一' }
+  ];
+  for (var p = 0; p < personas.length; p++) {
+    var active = (curPersona === personas[p].id) ? 'border-color:var(--accent);background:#fef8ef;' : '';
+    html += '<label style="flex:1;padding:10px;border-radius:8px;border:0.5px solid ' + (curPersona === personas[p].id ? 'var(--accent)' : 'var(--border)') + ';cursor:pointer;text-align:center;' + active + '" onclick="setPersona(\'' + personas[p].id + '\')">';
+    html += '<div style="font-size:24px;margin-bottom:4px;">' + personas[p].icon + '</div>';
+    html += '<div style="font-size:13px;font-weight:500;">' + personas[p].name + '</div>';
+    html += '<div style="font-size:10px;color:#888;">' + personas[p].hint + '</div>';
+    html += '</label>';
+  }
+  html += '</div></div>';
+
+  // ── v5.0: Prompt Boundary Declaration (spec-driven) ──
+  html += '<div class="form-group" style="background:#f9fafb;border:0.5px solid var(--border);border-radius:8px;padding:14px;margin-bottom:14px;">';
+  html += '<div class="form-label"><i class="fa-solid fa-ban"></i> Prompt 边界声明 <span class="tag tag-blue" style="font-size:10px;margin-left:4px;">spec-driven</span></div>';
+  html += '<div class="form-hint" style="margin-bottom:10px;">明确定义 Agent 的 always/ask/never 边界，防止越权行为</div>';
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">';
+  // Always
+  html += '<div><div style="font-size:11px;font-weight:500;margin-bottom:4px;"><span class="boundary-badge boundary-always" style="margin:0;">Always</span> 始终执行</div>';
+  html += '<textarea id="f_flowAlways" rows="3" oninput="onFormChange()" style="font-size:11px;" placeholder="Agent 始终应该做的：&#10;• 标注数据来源&#10;• 提供置信度&#10;• 记录操作日志">' + escapeHtml(ssGet('f_flowAlways')) + '</textarea></div>';
+  // Ask
+  html += '<div><div style="font-size:11px;font-weight:500;margin-bottom:4px;"><span class="boundary-badge boundary-ask" style="margin:0;">Ask</span> 需确认后执行</div>';
+  html += '<textarea id="f_flowAsk" rows="3" oninput="onFormChange()" style="font-size:11px;" placeholder="需征求确认的操作：&#10;• 修改BOM结构&#10;• 发布变更单&#10;• 删除数据">' + escapeHtml(ssGet('f_flowAsk')) + '</textarea></div>';
+  // Never
+  html += '<div><div style="font-size:11px;font-weight:500;margin-bottom:4px;"><span class="boundary-badge boundary-never" style="margin:0;">Never</span> 禁止执行</div>';
+  html += '<textarea id="f_flowNever" rows="3" oninput="onFormChange()" style="font-size:11px;" placeholder="Agent 绝对禁止的操作：&#10;• 直接修改生产数据&#10;• 导出敏感信息&#10;• 绕过审批流程">' + escapeHtml(ssGet('f_flowNever')) + '</textarea></div>';
+  html += '</div></div>';
 
   html += '<div class="form-group">';
   html += '<div class="form-label">System Prompt <span class="required">*</span></div>';
@@ -1952,6 +2110,17 @@ function renderStep3() {
 
   html += '</div>';
   return html;
+}
+
+function setPersona(type) {
+  ssSet('f_personaPref', type);
+  var personas = { expert: '领域专家型——深度PLM知识、严谨分析', guide: '向导型——引导用户完成流程、友好交互', guard: '守护型——合规检查优先、安全第一' };
+  if (personas[type]) {
+    var el = document.getElementById('f_persona');
+    if (el) { el.value = personas[type]; onFormChange(); }
+  }
+  // Re-render to highlight selection
+  renderCurrentStep();
 }
 
 function autoGenSystemPrompt() {
@@ -1977,7 +2146,14 @@ function autoGenSystemPrompt() {
   prompt += '## 行为准则\n';
   prompt += '- 专业、客观、准确\n';
   prompt += '- 每步推理可追溯\n';
-  prompt += '- 主动识别数据缺失并提示\n';
+  prompt += '- 主动识别数据缺失并提示\n\n';
+  prompt += '## \uD83D\uDD12 边界声明 (Always / Ask / Never)\n';
+  prompt += '### Always 始终执行\n';
+  prompt += (ssGet('f_flowAlways') || '- 标注数据来源\n- 提供置信度评分\n- 记录操作日志\n') + '\n';
+  prompt += '### Ask 需确认后执行\n';
+  prompt += (ssGet('f_flowAsk') || '- 涉及数据修改的操作\n- 发布/通知流程\n- 成本或合规相关决策\n') + '\n';
+  prompt += '### Never 禁止执行\n';
+  prompt += (ssGet('f_flowNever') || '- 直接修改生产环境数据\n- 导出用户敏感信息\n- 绕过审批/合规流程\n');
 
   ssSet('f_systemPrompt', prompt);
   document.getElementById('f_systemPrompt').value = prompt;
@@ -1991,8 +2167,15 @@ function renderStep4() {
   var html = '';
   html += '<div style="max-width:860px;">';
 
+  // ── Simplicity Check (incremental-implementation Rule 0) ──
+  html += '<div class="form-group simplicity-check" style="background:#f9fafb;border:0.5px solid var(--border);border-radius:8px;padding:14px;margin-bottom:18px;">';
+  html += '<div class="form-label" style="margin-bottom:4px;"><i class="fa-solid fa-scale-balanced"></i> 简单性检查 <span class="tag tag-blue" style="font-size:10px;margin-left:4px;">incremental Rule 0</span></div>';
+  html += '<div class="form-hint" style="margin-bottom:8px;">"能用更少的行数做到吗？这些抽象值得它们的复杂性吗？"</div>';
+  html += '<textarea id="f_simplicityCheck" rows="3" oninput="onFormChange()" style="font-size:13px;" placeholder="1. 本场景最简可行方案是什么？&#10;2. 当前选择的复杂性的理由...&#10;3. 哪些能力可以在v2添加？">' + escapeHtml(ssGet('f_simplicityCheck')) + '</textarea>';
+  html += '</div>';
+
   // Capability toggles
-  html += '<div class="form-group"><div class="form-label">Agent 能力配置</div>';
+  html += '<div class="form-group"><div class="form-label">Agent 核心能力配置</div>';
   html += '<div class="capability-grid">';
 
   var caps = [
@@ -2011,6 +2194,28 @@ function renderStep4() {
     html += '<div class="cap-icon">' + c.icon + '</div>';
     html += '<div class="cap-name">' + c.name + '</div>';
     html += '<div class="cap-desc">' + c.desc + '</div>';
+    html += '</label>';
+  }
+  html += '</div></div>';
+
+  // ── PLM-Specific Capabilities ──
+  var plmCaps = [
+    { id: 'f_capOntology', icon: '\uD83D\uDD78\uFE0F', name: '本体知识图谱推理', desc: '基于Windchill Ontology的关系推理' },
+    { id: 'f_capBOMCompare', icon: '\uD83D\uDCCA', name: 'BOM差异比对', desc: 'EBOM/MBOM/PBOM多维度差异分析' },
+    { id: 'f_capCompliance', icon: '\uD83D\uDCCB', name: '合规引擎', desc: 'IATF/ISO/AS标准条款自动匹配' },
+    { id: 'f_capPredictive', icon: '\uD83D\uDD2E', name: '预测分析', desc: '基于历史数据的趋势预测和异常检测' }
+  ];
+  html += '<div class="form-group"><div class="form-label">PLM 领域专属能力 <span class="tag tag-blue" style="font-size:10px;margin-left:4px;">PLM domain</span></div>';
+  html += '<div class="capability-grid">';
+  for (var j = 0; j < plmCaps.length; j++) {
+    var pc = plmCaps[j];
+    var pchecked = ssGet(pc.id) === '1' ? ' checked' : '';
+    var penabledCls = ssGet(pc.id) === '1' ? ' enabled' : '';
+    html += '<label class="capability-card' + penabledCls + '" id="cap-' + pc.id + '" onclick="toggleCap(\'' + pc.id + '\')">';
+    html += '<input type="checkbox" id="' + pc.id + '" ' + pchecked + '>';
+    html += '<div class="cap-icon">' + pc.icon + '</div>';
+    html += '<div class="cap-name">' + pc.name + '</div>';
+    html += '<div class="cap-desc">' + pc.desc + '</div>';
     html += '</label>';
   }
   html += '</div></div>';
@@ -2093,13 +2298,33 @@ function renderStep5() {
   var html = '';
   html += '<div style="max-width:860px;">';
 
+  // ── 安全降级策略 (debugging-and-error-recovery) ──
+  var degradationEntries = ssGetJSON('f_degradationStrategy', []);
   html += '<div class="form-group">';
-  html += '<div class="form-label">错误处理策略</div>';
+  html += '<div class="form-label"><i class="fa-solid fa-shield-halved"></i> 安全降级策略 <span class="tag tag-blue" style="font-size:10px;margin-left:4px;">debugging 方法论</span></div>';
+  html += '<div class="form-hint">当核心能力不可用时，系统应如何降级运行</div>';
+  html += '<div id="degradationList">';
+  for (var dg = 0; dg < degradationEntries.length; dg++) {
+    var dgItem = degradationEntries[dg];
+    html += '<div style="display:flex;gap:6px;margin-bottom:4px;">';
+    html += '<input type="text" class="dgFailure" value="' + escapeHtml(dgItem.failure || '') + '" oninput="saveDegradation()" placeholder="故障场景" style="flex:1;"/>';
+    html += '<span style="color:#888;align-self:center;">→</span>';
+    html += '<input type="text" class="dgFallback" value="' + escapeHtml(dgItem.fallback || '') + '" oninput="saveDegradation()" placeholder="降级方案" style="flex:2;"/>';
+    html += '<button onclick="removeDegradationEntry(this)" style="background:none;border:none;color:#e24b4a;cursor:pointer;font-size:12px;padding:0 4px;">\u2715</button>';
+    html += '</div>';
+  }
+  html += '</div>';
+  html += '<button class="btn btn-outline btn-xs" onclick="addDegradationEntry()" style="margin-top:6px;"><i class="fa-solid fa-plus"></i> 添加降级场景</button>';
+  html += '<div class="form-hint" style="margin-top:4px;font-size:10px;">预设：Windchill API不可用 → 使用本地缓存 | 知识库超时 → 返回静态规则建议 | Token超限 → 分段处理合并</div>';
+  html += '</div>';
+
+  html += '<div class="form-group">';
+  html += '<div class="form-label">错误处理策略 <span class="required">*</span></div>';
   html += '<textarea id="f_errorStrategy" rows="3" oninput="onFormChange()" placeholder="当Agent出现错误时的处理策略...">' + escapeHtml(ssGet('f_errorStrategy')) + '</textarea>';
   html += '</div>';
 
   html += '<div class="form-group">';
-  html += '<div class="form-label">兜底方案</div>';
+  html += '<div class="form-label">兜底方案 <span class="required">*</span></div>';
   html += '<textarea id="f_fallbackPlan" rows="3" oninput="onFormChange()" placeholder="当主要流程失败时的降级/兜底方案...">' + escapeHtml(ssGet('f_fallbackPlan')) + '</textarea>';
   html += '</div>';
 
@@ -2110,16 +2335,51 @@ function renderStep5() {
 
   html += '<div class="form-group">';
   html += '<div class="form-label">合规边界</div>';
-  html += '<textarea id="f_complianceBoundary" rows="3" oninput="onFormChange()" placeholder="Agent 不允许越过的合规红线...">' + escapeHtml(ssGet('f_complianceBoundary')) + '</textarea>';
+  html += '<textarea id="f_complianceBoundary" rows="2" oninput="onFormChange()" placeholder="Agent 不允许越过的合规红线...">' + escapeHtml(ssGet('f_complianceBoundary')) + '</textarea>';
+  html += '</div>';
+
+  // ── 可回滚性 (incremental + git-workflow) ──
+  html += '<div class="form-group">';
+  html += '<div class="form-label"><i class="fa-solid fa-rotate-left"></i> 变更可回滚性 <span class="tag tag-blue" style="font-size:10px;margin-left:4px;">incremental 方法论</span></div>';
+  html += '<div class="form-hint">每个操作是否可独立回滚？如果产出错误，如何恢复？</div>';
+  html += '<textarea id="f_rollbackPlan" rows="2" oninput="onFormChange()" placeholder="例：每次BOM变更前自动创建快照，异常时自动回滚到上一版本...">' + escapeHtml(ssGet('f_rollbackPlan')) + '</textarea>';
   html += '</div>';
 
   html += '<div class="form-group">';
   html += '<div class="form-label">记忆策略</div>';
-  html += '<textarea id="f_memoryStrategy" rows="3" oninput="onFormChange()" placeholder="会话记忆保留策略：短期/长期/上下文窗口...">' + escapeHtml(ssGet('f_memoryStrategy')) + '</textarea>';
+  html += '<textarea id="f_memoryStrategy" rows="2" oninput="onFormChange()" placeholder="会话记忆保留策略：短期/长期/上下文窗口...">' + escapeHtml(ssGet('f_memoryStrategy')) + '</textarea>';
   html += '</div>';
 
   html += '</div>';
   return html;
+}
+
+// ── Step 5: Degradation Strategy Helpers ──
+function addDegradationEntry() {
+  var list = document.getElementById('degradationList');
+  if (!list) return;
+  var div = document.createElement('div');
+  div.style.cssText = 'display:flex;gap:6px;margin-bottom:4px;';
+  div.innerHTML = '<input type="text" class="dgFailure" oninput="saveDegradation()" placeholder="故障场景" style="flex:1;"/><span style="color:#888;align-self:center;">→</span><input type="text" class="dgFallback" oninput="saveDegradation()" placeholder="降级方案" style="flex:2;"/><button onclick="removeDegradationEntry(this)" style="background:none;border:none;color:#e24b4a;cursor:pointer;font-size:12px;padding:0 4px;">\u2715</button>';
+  list.appendChild(div);
+}
+
+function removeDegradationEntry(btn) {
+  var div = btn.parentNode;
+  if (div && div.parentNode) div.parentNode.removeChild(div);
+  saveDegradation();
+}
+
+function saveDegradation() {
+  var failures = document.querySelectorAll('#degradationList .dgFailure');
+  var fallbacks = document.querySelectorAll('#degradationList .dgFallback');
+  var arr = [];
+  for (var i = 0; i < failures.length; i++) {
+    var f = failures[i].value.trim();
+    var fb = fallbacks[i] ? fallbacks[i].value.trim() : '';
+    if (f) arr.push({ failure: f, fallback: fb });
+  }
+  ssSet('f_degradationStrategy', JSON.stringify(arr));
 }
 
 // ==============================
@@ -2142,6 +2402,25 @@ function renderStep6() {
   html += '<div class="form-group">';
   html += '<div class="form-label">UI 流程说明</div>';
   html += '<textarea id="f_uiFlow" rows="4" oninput="onFormChange()" placeholder="描述界面的交互流程：用户操作 → 界面响应 → 数据流转...">' + escapeHtml(ssGet('f_uiFlow')) + '</textarea>';
+  html += '</div>';
+
+  // ── UI Quality Checklist (frontend-ui-engineering) ──
+  html += '<div class="form-group ui-quality-checklist" style="background:#f9fafb;border:0.5px solid var(--border);border-radius:8px;padding:14px;margin-bottom:16px;">';
+  html += '<div class="form-label" style="margin-bottom:8px;"><i class="fa-solid fa-palette"></i> 前端工程检查清单 <span class="tag tag-blue" style="font-size:10px;margin-left:4px;">frontend-ui 方法论</span></div>';
+  var uiItems = [
+    { id: 'f_uiLoading', label: '加载态（数据加载中用户看到什么）' },
+    { id: 'f_uiEmpty', label: '空状态（无数据时如何引导用户）' },
+    { id: 'f_uiError', label: '错误状态（异常时如何提示和恢复）' },
+    { id: 'f_uiAccessibility', label: '可访问性（键盘导航、ARIA标签、对比度）' },
+    { id: 'f_uiResponsive', label: '响应式设计（320/768/1024/1440px）' }
+  ];
+  for (var u = 0; u < uiItems.length; u++) {
+    var uiItem = uiItems[u];
+    var uiChecked = ssGet(uiItem.id) === '1' ? ' checked' : '';
+    html += '<label style="display:flex;align-items:center;gap:8px;padding:4px 0;font-size:13px;cursor:pointer;">';
+    html += '<input type="checkbox" id="' + uiItem.id + '" onchange="ssSet(\'' + uiItem.id + '\', this.checked?\'1\':\'0\');onFormChange();"' + uiChecked + '>';
+    html += '<span>' + uiItem.label + '</span></label>';
+  }
   html += '</div>';
 
   html += '<div style="padding: 16px;background:#fef8ef;border:0.5px solid var(--accent);border-radius:8px;margin-bottom:16px;">';
@@ -2206,21 +2485,106 @@ function generatePrototype() {
 }
 
 // ==============================
-// STEP 7: 交付物
+// STEP 7: 交付物 (v5.0: 验收清单 + 版本历史 + 场景包)
 // ==============================
 function renderStep7() {
   var html = '';
   html += '<div style="max-width:860px;">';
-  html += '<div style="display:flex;gap:8px;margin-bottom:16px;">';
+
+  // ── Export buttons ──
+  html += '<div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;">';
   html += '<button class="btn btn-success" onclick="exportMarkdown()"><i class="fa-solid fa-file-lines"></i> 导出 Markdown</button>';
-  html += '<button class="btn btn-secondary" onclick="exportHTML()"><i class="fa-solid fa-file-code"></i> 导出 HTML 原型</button>';
-  html += '<button class="btn btn-outline" onclick="generateDeliverablePreview()"><i class="fa-solid fa-rotate"></i> 刷新预览</button>';
+  html += '<button class="btn btn-secondary" onclick="exportHTML()"><i class="fa-solid fa-file-code"></i> 导出 HTML</button>';
+  html += '<button class="btn btn-outline" onclick="exportJSON()"><i class="fa-solid fa-download"></i> 导出 JSON</button>';
+  html += '<button class="btn btn-outline" onclick="exportScenePackage()"><i class="fa-solid fa-box-archive"></i> 场景包</button>';
+  html += '<button class="btn btn-sm btn-secondary" onclick="generateDeliverablePreview()"><i class="fa-solid fa-rotate"></i> 刷新</button>';
   html += '</div>';
+
+  // ── v5.0: Acceptance Checklist ──
+  html += '<div class="acceptance-checklist">';
+  html += '<h3><i class="fa-solid fa-clipboard-check"></i> 交付物验收清单 <span class="tag tag-blue" style="font-size:10px;margin-left:4px;">spec-driven</span></h3>';
+  var checks = buildAcceptanceChecks();
+  for (var i = 0; i < checks.length; i++) {
+    var c = checks[i];
+    html += '<div class="accept-check-item"><span class="ac-icon ' + c.status + '">' + c.icon + '</span>';
+    html += '<span style="flex:1;">' + escapeHtml(c.label) + '</span>';
+    if (c.detail) html += '<span style="font-size:10px;color:#888;">' + escapeHtml(c.detail) + '</span>';
+    html += '</div>';
+  }
+  html += '</div>';
+
+  // ── v5.0: Version History Panel ──
+  var history = ssGetJSON('f_versionHistory', []);
+  if (history.length > 0) {
+    html += '<div class="acceptance-checklist">';
+    html += '<h3><i class="fa-solid fa-code-branch"></i> 版本历史 (' + history.length + ' 个快照)</h3>';
+    html += '<div class="version-history-panel">';
+    for (var v = history.length - 1; v >= 0; v--) {
+      var snap = history[v];
+      var isLatest = v === history.length - 1;
+      html += '<div class="version-entry' + (isLatest ? ' current' : '') + '" onclick="restoreVersion(' + v + ')" title="点击恢复到该版本">';
+      html += '<span class="v-dot"></span>';
+      html += '<span style="flex:1;"><strong>v' + escapeHtml(snap.version) + '</strong> — ' + escapeHtml(snap.stepName) + '</span>';
+      html += '<span style="font-size:10px;color:#888;">' + escapeHtml(snap.timestamp) + '</span>';
+      html += '</div>';
+    }
+    html += '</div></div>';
+  }
+
+  // ── Deliverable Preview ──
   html += '<div id="deliverablePreviewContent" class="deliverable-preview">';
   html += '<div class="empty-state"><div class="empty-icon">\uD83D\uDCE6</div><p>正在生成交付物预览...</p></div>';
   html += '</div>';
+
   html += '</div>';
   return html;
+}
+
+// v5.0: Build acceptance checklist based on current state
+function buildAcceptanceChecks() {
+  var f = getAllFieldValues();
+  var checks = [
+    { label: '场景定义完整（名称/角色/痛点/数据源）', icon: (f.name && f.name !== '未命名场景' && f.role && f.pain && f.datasources.length > 0 && f.datasources[0].name) ? '\u2705' : '\u26A0\uFE0F', status: (f.name && f.role && f.pain && f.datasources.length > 0 && f.datasources[0].name) ? 'pass' : 'fail' },
+    { label: '业务流程已定义（BPMN 或 Mermaid）', icon: (f.bpmnXml || (f.mainFlow && f.mainFlow.trim().length > 10)) ? '\u2705' : '\u274C', status: (f.bpmnXml || (f.mainFlow && f.mainFlow.trim().length > 10)) ? 'pass' : 'fail' },
+    { label: 'System Prompt 已编写', icon: f.systemPrompt && f.systemPrompt.trim() ? '\u2705' : '\u274C', status: f.systemPrompt && f.systemPrompt.trim() ? 'pass' : 'fail' },
+    { label: 'Persona 类型已选择', icon: ssGet('f_personaPref') ? '\u2705' : '\u26A0\uFE0F', status: ssGet('f_personaPref') ? 'pass' : 'fail' },
+    { label: 'Prompt 边界声明（Always/Ask/Never）', icon: ssGet('f_flowAlways') || ssGet('f_flowNever') ? '\u2705' : '\u26A0\uFE0F', status: ssGet('f_flowAlways') || ssGet('f_flowNever') ? 'pass' : 'fail' },
+    { label: '至少启用一项 Agent 能力', icon: (f.capRAG || f.capToolUse || f.capMultiTurn || f.capMemory) ? '\u2705' : '\u274C', status: (f.capRAG || f.capToolUse || f.capMultiTurn || f.capMemory) ? 'pass' : 'fail' },
+    { label: '简单性检查已完成', icon: f.simplicityCheck && f.simplicityCheck.trim() ? '\u2705' : '\u25EF', status: f.simplicityCheck && f.simplicityCheck.trim() ? 'pass' : 'pending', detail: 'incremental Rule 0' },
+    { label: '错误处理策略 + 兜底方案已定义', icon: f.errorStrategy && f.fallbackPlan ? '\u2705' : '\u274C', status: f.errorStrategy && f.fallbackPlan ? 'pass' : 'fail' },
+    { label: '安全降级策略已配置', icon: ssGetJSON('f_degradationStrategy', []).length > 0 ? '\u2705' : '\u25EF', status: ssGetJSON('f_degradationStrategy', []).length > 0 ? 'pass' : 'pending' },
+    { label: '交互原型已生成', icon: (document.getElementById('protoPreviewArea') && document.getElementById('protoPreviewArea').innerHTML.trim()) ? '\u2705' : '\u274C', status: (document.getElementById('protoPreviewArea') && document.getElementById('protoPreviewArea').innerHTML.trim()) ? 'pass' : 'fail' },
+    { label: 'UI 质量检查（四态覆盖）', icon: ssGet('f_uiLoading') === '1' && ssGet('f_uiEmpty') === '1' && ssGet('f_uiError') === '1' ? '\u2705' : '\u25EF', status: ssGet('f_uiLoading') === '1' && ssGet('f_uiEmpty') === '1' && ssGet('f_uiError') === '1' ? 'pass' : 'pending' },
+    { label: '合规约束已填写', icon: f.compliance && f.compliance !== '—' ? '\u2705' : '\u26A0\uFE0F', status: f.compliance && f.compliance !== '—' ? 'pass' : 'fail' }
+  ];
+  return checks;
+}
+
+// v5.0: Scene package export — bundles JSON + Markdown + meta
+function exportScenePackage() {
+  saveAllFields();
+  var f = getAllFieldValues();
+  var pkg = {
+    version: '5.0',
+    exportedAt: new Date().toISOString(),
+    scene: f,
+    meta: {
+      step: getCurrentStep(),
+      snapshotCount: ssGetJSON('f_versionHistory', []).length,
+      checks: buildAcceptanceChecks()
+    },
+    deliverables: {
+      markdown: true,
+      html: true,
+      json: true
+    }
+  };
+  var blob = new Blob([JSON.stringify(pkg, null, 2)], { type: 'application/json;charset=utf-8' });
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'PLM_场景包_' + f.name.replace(/\\s+/g, '_').replace(/[\/\\:*?"<>|]/g, '') + '.json';
+  a.click();
+  wfToast('场景包已导出 (' + pkg.meta.snapshotCount + ' 个快照)');
 }
 
 function generateDeliverablePreview() {
@@ -2333,7 +2697,7 @@ function saveAllFields() {
   saveDataSources();
 
   // Step 2 fields
-  var f2 = ['f_mainFlow','f_exceptionFlow','f_bizEvents','f_systems'];
+  var f2 = ['f_mainFlow','f_exceptionFlow','f_bizEvents','f_systems','f_flowAlways','f_flowAsk','f_flowNever'];
   for (var j = 0; j < f2.length; j++) {
     var el2 = document.getElementById(f2[j]);
     if (el2) ssSet(f2[j], el2.value || '');
@@ -2378,64 +2742,167 @@ function saveAllFields() {
     var el6 = document.getElementById(f6[n]);
     if (el6) ssSet(f6[n], el6.value || '');
   }
+  
+  // ── Version snapshot ──
+  createVersionSnapshot();
+}
+
+// ── Version Tracking (git-workflow methodology) ──
+function createVersionSnapshot() {
+  try {
+    var history = ssGetJSON('f_versionHistory', []);
+    var allFields = getAllFieldValues();
+    var step = getCurrentStep();
+    var snapshot = {
+      version: (history.length + 1) + '.0',
+      timestamp: new Date().toLocaleString('zh-CN'),
+      step: step,
+      stepName: STEPS[step - 1].title,
+      data: allFields
+    };
+    history.push(snapshot);
+    // Keep max N versions
+    if (history.length > MAX_SNAPSHOTS) history = history.slice(-MAX_SNAPSHOTS);
+    ssSet('f_versionHistory', JSON.stringify(history));
+  } catch(e) {}
+}
+
+function restoreVersion(index) {
+  try {
+    var history = ssGetJSON('f_versionHistory', []);
+    if (index < 0 || index >= history.length) return;
+    var snap = history[index];
+    var data = snap.data;
+    // Restore all fields from snapshot
+    var keys = Object.keys(data);
+    for (var i = 0; i < keys.length; i++) {
+      var k = keys[i];
+      var v = data[k];
+      if (typeof v === 'object') ssSet(k, JSON.stringify(v));
+      else ssSet(k, String(v !== undefined ? v : ''));
+    }
+    wfToast('已恢复到版本 ' + snap.version + ' (' + snap.stepName + ')');
+    renderCurrentStep();
+  } catch(e) { wfToast('版本恢复失败'); }
 }
 
 // ==============================
 // NAVIGATION
 // ==============================
 function goToStep(n) {
-  saveAllFields();
-  setCurrentStep(n);
-  renderCurrentStep();
-  // Scroll to top
-  document.getElementById('stepBody').scrollTop = 0;
+  try {
+    saveAllFields();
+    setCurrentStep(n);
+    renderCurrentStep();
+    document.getElementById('stepBody').scrollTop = 0;
+  } catch(e) {
+    wfToast('导航出错: ' + (e.message || '未知错误'));
+  }
+}
+
+// ── Quality Gate System (v5.0: 3-tier) ──
+// 🔴 MANDATORY — blocks progress
+// 🟡 RECOMMENDED — warns but allows
+// 🟢 AUTO — silent check
+var GATES = {
+  1: { required: ['f_name','f_role','f_pain','datasources'], requiredLabels: {'f_name':'场景名称','f_role':'目标用户角色','f_pain':'业务痛点描述','datasources':'核心数据源'},
+       recommended: ['f_coreHypothesis','f_notInScope','f_successCriteria'], warning: '建议完成需求澄清检查（假设浮现、不做列表、成功标准）' },
+  2: { required: ['flowDefined'], requiredLabels: {'flowDefined':'业务流程'},
+       recommended: ['f_premortem','f_flowAlways'], warning: '建议完成预失败分析和流程边界约束' },
+  3: { required: ['f_systemPrompt'], requiredLabels: {'f_systemPrompt':'System Prompt'},
+       recommended: ['f_persona'], warning: '建议选择 Agent Persona 类型' },
+  4: { required: ['capabilityEnabled'], requiredLabels: {'capabilityEnabled':'Agent 能力'},
+       recommended: ['f_simplicityCheck'], warning: '建议完成简单性检查' },
+  5: { required: ['f_errorStrategy','f_fallbackPlan'], requiredLabels: {'f_errorStrategy':'错误处理策略','f_fallbackPlan':'兜底方案'},
+       recommended: ['f_degradationStrategy'], warning: '建议定义安全降级策略' },
+  6: { required: ['protoGenerated'], requiredLabels: {'protoGenerated':'交互原型'},
+       recommended: ['uiChecklistComplete'], warning: '建议完成 UI 质量检查清单' }
+};
+
+function checkGate(step) {
+  var gate = GATES[step];
+  if (!gate) return { passed: true, missing: [] };
+  var missing = [];
+  var recommendedMissing = [];
+  for (var i = 0; i < gate.required.length; i++) {
+    var field = gate.required[i];
+    if (field === 'flowDefined') {
+      var bpmnXml = ssGet('f_bpmnXml', '');
+      var mermaid = ssGet('f_mainFlow', '');
+      if ((!bpmnXml || bpmnXml.indexOf('<bpmn:startEvent') === -1 || bpmnXml.indexOf('<bpmn:endEvent') === -1) && (!mermaid || mermaid.trim().length < 10)) {
+        missing.push('流程未定义');
+      }
+    } else if (field === 'capabilityEnabled') {
+      var hasCap = ssGet('f_capRAG')==='1'||ssGet('f_capToolUse')==='1'||ssGet('f_capMultiTurn')==='1'||ssGet('f_capMemory')==='1';
+      if (!hasCap) missing.push('未启用任何Agent能力');
+    } else if (field === 'protoGenerated') {
+      var protoArea = document.getElementById('protoPreviewArea');
+      if (!protoArea || !protoArea.innerHTML.trim()) missing.push('未生成原型');
+    } else if (field === 'datasources') {
+      var ds = ssGetJSON('f_datasources', []);
+      var hasDs = false;
+      for (var d = 0; d < ds.length; d++) { if (ds[d].name && ds[d].name.trim()) { hasDs = true; break; } }
+      if (!hasDs) missing.push('未配置数据源');
+    } else {
+      if (!ssGet(field, '').trim()) missing.push(field);
+    }
+  }
+  // Check recommended
+  if (gate.recommended) {
+    for (var j = 0; j < gate.recommended.length; j++) {
+      var rf = gate.recommended[j];
+      if (rf === 'uiChecklistComplete') {
+        var uiChk = (document.getElementById('f_uiLoading')||{}).checked && (document.getElementById('f_uiEmpty')||{}).checked && (document.getElementById('f_uiError')||{}).checked;
+        if (!uiChk) recommendedMissing.push('UI质量检查未完成');
+      } else if (rf === 'f_successCriteria') {
+        var sc = ssGetJSON('f_successCriteria', []);
+        if (sc.length === 0) recommendedMissing.push('成功标准');
+      } else if (rf === 'f_degradationStrategy') {
+        var dg = ssGetJSON('f_degradationStrategy', []);
+        if (dg.length === 0) recommendedMissing.push('安全降级策略');
+      } else {
+        if (!ssGet(rf, '').trim()) recommendedMissing.push(rf);
+      }
+    }
+  }
+  return { passed: missing.length === 0, missing: missing, recommendedMissing: recommendedMissing, warning: gate.warning };
 }
 
 function nextStep() {
-  saveAllFields();
-  var step = getCurrentStep();
-  
-  // Step 1 validation: required fields
-  if (step === 1) {
-    var name = ssGet('f_name', '').trim();
-    var role = ssGet('f_role', '').trim();
-    var pain = ssGet('f_pain', '').trim();
-    var datasources = ssGetJSON('f_datasources', []);
-    var hasDs = false;
-    for (var i = 0; i < datasources.length; i++) {
-      if (datasources[i].name && datasources[i].name.trim()) { hasDs = true; break; }
+  try {
+    saveAllFields();
+    var step = getCurrentStep();
+    
+    // Quality gate check (v5.0: 3-tier mandatory/recommended/auto)
+    var gateResult = checkGate(step);
+    if (!gateResult.passed) {
+      var rawMsg = gateResult.missing[0];
+      // Use descriptive labels from GATES definition
+      var gate = GATES[step];
+      var label = (gate && gate.requiredLabels && gate.requiredLabels[rawMsg]) ? gate.requiredLabels[rawMsg] : rawMsg;
+      var msg = '\uD83D\uDD34 必填项未完成：' + label;
+      if (rawMsg === 'flowDefined') msg = '\uD83D\uDD34 必填项未完成：请定义业务流程（BPMN或Mermaid）';
+      else if (rawMsg === 'capabilityEnabled') msg = '\uD83D\uDD34 必填项未完成：请启用至少一项 Agent 能力';
+      else if (rawMsg === 'protoGenerated') msg = '\uD83D\uDD34 必填项未完成：请先生成交互原型';
+      wfToast(msg);
+      return;
     }
-    if (!name) { wfToast('请填写场景名称'); return; }
-    if (!role) { wfToast('请填写目标用户角色'); return; }
-    if (!pain) { wfToast('请填写业务痛点描述'); return; }
-    if (!hasDs) { wfToast('请至少添加一个数据源'); return; }
-  }
-  
-  // Step 2 validation: must have flow defined (BPMN or Mermaid)
-  if (step === 2) {
-    var flowMode = ssGet('f_flowMode', 'bpmn');
-    if (flowMode === 'bpmn') {
-      var bpmnXml = ssGet('f_bpmnXml', '');
-      if (!bpmnXml || bpmnXml.indexOf('<bpmn:task') === -1 && bpmnXml.indexOf('<bpmn:userTask') === -1 && bpmnXml.indexOf('<bpmn:serviceTask') === -1 && bpmnXml.indexOf('<bpmn:exclusiveGateway') === -1) {
-        // Check if at least has start + end + one activity
-        var hasStart = bpmnXml.indexOf('<bpmn:startEvent') !== -1;
-        var hasEnd = bpmnXml.indexOf('<bpmn:endEvent') !== -1;
-        if (!hasStart || !hasEnd) { wfToast('请在 BPMN 画布上添加开始和结束事件，以及至少一个任务节点'); return; }
-        wfToast('提示：建议添加至少一个任务节点丰富流程'); 
-      }
-    } else {
-      var mermaidCode = ssGet('f_mainFlow', '');
-      if (!mermaidCode || mermaidCode.trim().length < 10) { wfToast('请在 Mermaid 编辑器中定义流程'); return; }
+    
+    // Recommended check — warn but don't block
+    if (gateResult.recommendedMissing && gateResult.recommendedMissing.length > 0) {
+      wfToast('\u26A0\uFE0F ' + gateResult.warning);
     }
+    
+    if (step >= 7) {
+      wfToast('设计完成！请查看交付物预览');
+      return;
+    }
+    setCurrentStep(step + 1);
+    renderCurrentStep();
+    document.getElementById('stepBody').scrollTop = 0;
+  } catch(e) {
+    wfToast('操作出错: ' + (e.message || '未知错误'));
   }
-  
-  if (step >= 7) {
-    wfToast('设计完成！请查看交付物预览');
-    return;
-  }
-  setCurrentStep(step + 1);
-  renderCurrentStep();
-  document.getElementById('stepBody').scrollTop = 0;
 }
 
 function prevStep() {
@@ -2491,6 +2958,10 @@ function getAllFieldValues() {
     flowSteps: ssGetJSON('f_flowSteps', []),
     bpmnXml: ssGet('f_bpmnXml', ''),
     flowMode: ssGet('f_flowMode', 'bpmn'),
+    flowAlways: ssGet('f_flowAlways', ''),
+    flowAsk: ssGet('f_flowAsk', ''),
+    flowNever: ssGet('f_flowNever', ''),
+    simplicityCheck: ssGet('f_simplicityCheck', ''),
     protoTitle: ssGet('f_protoTitle', ''),
     protoDesc: ssGet('f_protoDesc', ''),
     uiFlow: ssGet('f_uiFlow', '')
@@ -2500,6 +2971,56 @@ function getAllFieldValues() {
 // ==============================
 // EXPORT FUNCTIONS
 // ==============================
+// v5.0: JSON export — full scene serialization
+function exportJSON() {
+  saveAllFields();
+  var f = getAllFieldValues();
+  var pkg = {
+    version: '5.0',
+    exportedAt: new Date().toISOString(),
+    scene: f,
+    meta: {
+      step: getCurrentStep(),
+      snapshotCount: ssGetJSON('f_versionHistory', []).length
+    }
+  };
+  var blob = new Blob([JSON.stringify(pkg, null, 2)], { type: 'application/json;charset=utf-8' });
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'PLM_AI_Scene_' + f.name.replace(/\s+/g, '_').replace(/[\/\\:*?"<>|]/g, '') + '.json';
+  a.click();
+  wfToast('JSON 场景包已导出');
+}
+
+// v5.0: JSON import — full scene restore
+function importJSON(fileInput) {
+  var file = fileInput.files[0];
+  if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      var pkg = JSON.parse(e.target.result);
+      if (!pkg.scene || !pkg.version) { wfToast('无效的场景JSON文件'); return; }
+      if (!confirm('导入将覆盖当前场景数据（版本 ' + (pkg.version || '?') + '），确定继续？')) return;
+      var data = pkg.scene;
+      var keys = Object.keys(data);
+      for (var i = 0; i < keys.length; i++) {
+        var k = keys[i];
+        var v = data[k];
+        if (typeof v === 'boolean') ssSet(k, v ? '1' : '0');
+        else if (typeof v === 'object') ssSet(k, JSON.stringify(v));
+        else ssSet(k, String(v !== undefined ? v : ''));
+      }
+      wfToast('JSON 场景已导入，共 ' + keys.length + ' 个字段');
+      renderCurrentStep();
+    } catch(err) {
+      wfToast('JSON 解析失败: ' + (err.message || '格式错误'));
+    }
+  };
+  reader.readAsText(file);
+  fileInput.value = '';
+}
+
 function exportMarkdown() {
   saveAllFields();
   var f = getAllFieldValues();
@@ -2669,6 +3190,9 @@ function wfToast(msg) {
 // INITIALIZATION
 // ==============================
 document.addEventListener('DOMContentLoaded', function() {
+  // Restore data from localStorage mirror (cross-session persistence)
+  var restored = restoreFromLocalStorage();
+  
   // Ensure default datasources exist
   var ds = ssGetJSON('f_datasources', []);
   if (ds.length === 0) {
